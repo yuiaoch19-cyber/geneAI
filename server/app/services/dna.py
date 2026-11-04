@@ -1,9 +1,10 @@
 """DNA 序列规范化、校验与基础计算。
 
 口径必须与前端 src/lib/dna.ts 保持一致：
-- GC 含量分母为 A + T + G + C，纯 N 序列视为 0%；
+- GC / AT 含量分母为 A + T + G + C，N 单独计数且不参与分母；
 - 只接受 A/T/G/C/N，U 单独给出提示；
-- 空白、数字、连字符与 FASTA 头会被忽略。
+- 空白与换行会被忽略，小写会转成大写；
+- 数字、横线（比对缺口）与多个 FASTA 标题会被拒绝，避免静默丢字符。
 """
 
 import hashlib
@@ -13,24 +14,38 @@ from Bio.Seq import Seq
 from ..config import MAX_SEQUENCE_LENGTH
 from ..errors import ApiError
 
-ALLOWED = set("ATGC")
+ALLOWED = set("ATGCN")
 
 
 def normalize_sequence(raw: str) -> str:
-    lines = [line for line in raw.splitlines() if not line.lstrip().startswith(">")]
-    cleaned = "".join(lines)
-    cleaned = "".join(ch for ch in cleaned if not ch.isspace() and not ch.isdigit() and ch != "-")
+    header_count = 0
+    chunks: list[str] = []
+    for line in raw.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith(">"):
+            header_count += 1
+            if header_count > 1:
+                raise ApiError(
+                    400,
+                    "INVALID_FASTA",
+                    "仅支持单条 FASTA 记录：检测到多个以 “>” 开头的标题行。",
+                    "sequence",
+                )
+            continue
+        chunks.append(stripped)
+
+    cleaned = "".join("".join(chunks).split())
     return cleaned.upper()
 
 
 def validate_sequence(sequence: str) -> None:
     if not sequence:
-        raise ApiError(400, "INVALID_SEQUENCE", "序列为空，请输入至少一个碱基。", "sequence")
-    if "U" in sequence:
         raise ApiError(
             400,
             "INVALID_SEQUENCE",
-            "检测到 U（尿嘧啶），这里需要 DNA 序列，请将 U 替换为 T。",
+            "序列为空，请输入至少一个碱基。",
             "sequence",
         )
     if len(sequence) > MAX_SEQUENCE_LENGTH:
@@ -41,13 +56,21 @@ def validate_sequence(sequence: str) -> None:
             "sequence",
         )
     for index, base in enumerate(sequence):
-        if base not in "ATGCN":
+        if base == "U":
+            raise ApiError(
+                400,
+                "INVALID_SEQUENCE",
+                f"第 {index + 1} 位检测到 U（尿嘧啶）。这里需要 DNA 序列，请先将 RNA 逆转录为 DNA。",
+                "sequence",
+            )
+        if base not in ALLOWED:
             raise ApiError(
                 400,
                 "INVALID_SEQUENCE",
                 f"第 {index + 1} 位出现非法字符 “{base}”，仅支持 A / T / G / C / N。",
                 "sequence",
             )
+
 
 
 def count_bases(sequence: str) -> dict[str, int]:

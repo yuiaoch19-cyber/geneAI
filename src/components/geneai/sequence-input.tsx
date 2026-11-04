@@ -4,6 +4,7 @@ import {
   analyzeSequence,
   formatNumber,
   formatPercent,
+  MAX_FASTA_BYTES,
   normalizeSequence,
 } from '@/lib/dna'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ type SequenceInputProps = {
   value: string
   onChange: (value: string) => void
   onFileLoaded?: (payload: { name: string; text: string }) => void
+  onFileError?: (message: string) => void
   onLoadDemo?: () => void
   placeholder?: string
   hint?: string
@@ -32,6 +34,7 @@ export function SequenceInput({
   value,
   onChange,
   onFileLoaded,
+  onFileError,
   onLoadDemo,
   placeholder = '粘贴 DNA 序列或 FASTA 内容，例如：\n>gene_fragment\nATGGTGCATCTGACTCCTGAGG…',
   hint,
@@ -45,9 +48,38 @@ export function SequenceInput({
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
-    const text = await file.text()
+
+    if (file.size > MAX_FASTA_BYTES) {
+      onFileError?.(
+        `文件「${file.name}」为 ${(file.size / 1024 / 1024).toFixed(1)} MB，超过 2 MB 上限。请截取目标片段后再上传。`
+      )
+      return
+    }
+
+    let text: string
+    try {
+      text = await file.text()
+    } catch {
+      onFileError?.('文件读取失败，请确认文件未被占用或损坏。')
+      return
+    }
+
+    if (!text.trim()) {
+      onFileError?.('文件内容为空，请选择包含 DNA 序列的 FASTA 文件。')
+      return
+    }
+
     onFileLoaded?.({ name: file.name, text })
-    onChange(normalizeSequence(text).sequence)
+
+    const parsed = normalizeSequence(text)
+    if (parsed.issue) {
+      // Keep the original text so the inline validation can point at the
+      // offending character or FASTA structure instead of showing a blank box.
+      onChange(text)
+      onFileError?.(parsed.issue.message)
+      return
+    }
+    onChange(parsed.sequence)
   }
 
   return (
@@ -124,28 +156,37 @@ export function SequenceInput({
           )}
         />
         <div className='flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/70 bg-muted/30 px-3.5 py-2.5'>
-          <span className='text-xs text-muted-foreground'>
-            长度{' '}
-            <span className='font-mono font-semibold text-foreground tabular-nums'>
-              {formatNumber(preview.length)}
+          {message ? (
+            <span className='flex items-center gap-1.5 text-xs text-destructive'>
+              <CircleAlert className='size-3.5' />
+              含无法识别的字符，暂不统计碱基与 GC
             </span>
-          </span>
-          <span className='hidden h-3 w-px bg-border sm:block' />
-          <span className='flex flex-wrap items-center gap-1'>
-            <BaseBadge base='A' count={preview.counts.a} />
-            <BaseBadge base='T' count={preview.counts.t} />
-            <BaseBadge base='G' count={preview.counts.g} />
-            <BaseBadge base='C' count={preview.counts.c} />
-            {preview.counts.n > 0 ? (
-              <BaseBadge base='N' count={preview.counts.n} />
-            ) : null}
-          </span>
-          <span className='ms-auto text-xs text-muted-foreground'>
-            GC{' '}
-            <span className='font-mono font-semibold text-foreground tabular-nums'>
-              {formatPercent(preview.gcContent)}
-            </span>
-          </span>
+          ) : (
+            <>
+              <span className='text-xs text-muted-foreground'>
+                长度{' '}
+                <span className='font-mono font-semibold text-foreground tabular-nums'>
+                  {formatNumber(preview.length)}
+                </span>
+              </span>
+              <span className='hidden h-3 w-px bg-border sm:block' />
+              <span className='flex flex-wrap items-center gap-1'>
+                <BaseBadge base='A' count={preview.counts.a} />
+                <BaseBadge base='T' count={preview.counts.t} />
+                <BaseBadge base='G' count={preview.counts.g} />
+                <BaseBadge base='C' count={preview.counts.c} />
+                {preview.counts.n > 0 ? (
+                  <BaseBadge base='N' count={preview.counts.n} />
+                ) : null}
+              </span>
+              <span className='ms-auto text-xs text-muted-foreground'>
+                GC{' '}
+                <span className='font-mono font-semibold text-foreground tabular-nums'>
+                  {formatPercent(preview.gcContent)}
+                </span>
+              </span>
+            </>
+          )}
         </div>
       </div>
 

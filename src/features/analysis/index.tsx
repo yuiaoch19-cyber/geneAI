@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator'
 import { ChartCard } from '@/components/geneai/chart-card'
 import { EmptyState } from '@/components/geneai/empty-state'
 import { ErrorState } from '@/components/geneai/error-state'
+import { LoadingState } from '@/components/geneai/loading-state'
 import { PageHeader } from '@/components/geneai/page-header'
 import { SequenceInput } from '@/components/geneai/sequence-input'
 import { AppHeader } from '@/components/layout/app-header'
@@ -154,6 +155,21 @@ function readPendingFasta(): PendingFasta | null {
   }
 }
 
+function buildSummary(analysis: SequenceAnalysis): string {
+  const canonical =
+    analysis.counts.a + analysis.counts.t + analysis.counts.g + analysis.counts.c
+  return [
+    `GeneAI 序列分析${analysis.name ? ` · ${analysis.name}` : ''}`,
+    `长度: ${analysis.length} bp`,
+    `A: ${analysis.counts.a}  T: ${analysis.counts.t}  G: ${analysis.counts.g}  C: ${analysis.counts.c}  N: ${analysis.counts.n}`,
+    `GC 含量: ${formatPercent(analysis.gcContent)}（分母 A+T+G+C=${canonical}）`,
+    `AT 含量: ${formatPercent(analysis.atContent)}`,
+    `互补链 (5′→3′): ${analysis.complement}`,
+    `反向互补链 (5′→3′): ${analysis.reverseComplement}`,
+    `RNA 转录 (5′→3′): ${analysis.rna}`,
+  ].join('\n')
+}
+
 export function SequenceAnalysisPage() {
   const [pending] = useState(readPendingFasta)
   const [name, setName] = useState(pending?.name ?? '')
@@ -162,6 +178,7 @@ export function SequenceAnalysisPage() {
     pending?.analysis ?? null
   )
   const [savedId, setSavedId] = useState<number | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -178,10 +195,20 @@ export function SequenceAnalysisPage() {
     },
   })
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (isAnalyzing) return
+    setIsAnalyzing(true)
+    setResult(null)
+    setSavedId(null)
+
+    // Yield one frame so the button spinner and the result skeleton are
+    // painted before the synchronous computation starts.
+    await new Promise((resolve) => setTimeout(resolve, 320))
+
     const analysis = analyzeSequence(raw)
     setResult(analysis)
-    setSavedId(null)
+    setIsAnalyzing(false)
+
     if (analysis.issue) {
       toast.error(analysis.issue.message)
       return
@@ -244,7 +271,7 @@ export function SequenceAnalysisPage() {
         />
 
         <div className='mt-6 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px]'>
-          <Card className='gap-0 py-0 shadow-card'>
+          <Card className='min-w-0 gap-0 py-0 shadow-card'>
             <div className='flex items-center justify-between gap-2 border-b border-border/70 px-5 py-4'>
               <div className='space-y-1'>
                 <h2 className='text-sm font-semibold tracking-tight'>
@@ -296,13 +323,22 @@ export function SequenceAnalysisPage() {
                     setName(header || fileName.replace(/\.[^.]+$/, ''))
                   }
                 }}
-                hint='仅支持 A / T / G / C / N；FASTA 头、空白、换行与数字会被自动忽略。'
+                onFileError={(message) => toast.error(message)}
+                hint='仅支持 A / T / G / C / N；小写会自动转为大写，空白与换行会被忽略；数字、- 与 U 会报错。N 单独计数但不计入 GC / AT 分母。单条 FASTA，最大 2 MB。'
               />
 
               <div className='flex flex-wrap items-center gap-2 pt-1'>
-                <Button type='button' onClick={handleAnalyze}>
-                  <Dna className='size-4' />
-                  分析序列
+                <Button
+                  type='button'
+                  onClick={() => void handleAnalyze()}
+                  disabled={isAnalyzing || !raw.trim()}
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className='size-4 animate-spin' />
+                  ) : (
+                    <Dna className='size-4' />
+                  )}
+                  {isAnalyzing ? '分析中…' : '分析序列'}
                 </Button>
                 <Button
                   type='button'
@@ -341,7 +377,7 @@ export function SequenceAnalysisPage() {
             </div>
           </Card>
 
-          <Card className='gap-0 py-0 shadow-card'>
+          <Card className='min-w-0 gap-0 py-0 shadow-card'>
             <div className='flex items-center justify-between gap-2 border-b border-border/70 px-5 py-4'>
               <div className='space-y-1'>
                 <h2 className='text-sm font-semibold tracking-tight'>
@@ -366,7 +402,9 @@ export function SequenceAnalysisPage() {
             </div>
 
             <div className='p-5'>
-              {!result ? (
+              {isAnalyzing ? (
+                <LoadingState rows={5} label='正在计算碱基组成与转换链…' />
+              ) : !result ? (
                 <EmptyState
                   icon={Dna}
                   title='等待分析'
@@ -402,11 +440,53 @@ export function SequenceAnalysisPage() {
 
                   <CompositionBar counts={result.counts} />
 
+                  <div className='grid grid-cols-5 gap-2'>
+                    {baseOrder.map((base) => {
+                      const count = result.counts[base.key]
+                      const share = result.length ? (count / result.length) * 100 : 0
+                      return (
+                        <div
+                          key={base.key}
+                          className='rounded-lg border border-border/70 bg-card px-1.5 py-2 text-center'
+                        >
+                          <p className='flex items-center justify-center gap-1 text-[11px] text-muted-foreground'>
+                            <span
+                              className={`size-1.5 rounded-full ${base.className}`}
+                            />
+                            {base.label}
+                          </p>
+                          <p className='mt-0.5 font-mono text-sm font-semibold tabular-nums'>
+                            {formatNumber(count)}
+                          </p>
+                          <p className='text-[10px] text-muted-foreground tabular-nums'>
+                            {formatPercent(share)}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      className='h-8 text-xs'
+                      onClick={() => handleCopy(buildSummary(result), '统计摘要')}
+                    >
+                      <Copy className='size-3.5' />
+                      复制统计摘要
+                    </Button>
+                    <span className='text-[11px] text-muted-foreground'>
+                      N 不参与 GC / AT 分母
+                    </span>
+                  </div>
+
                   <Separator />
 
                   <div className='space-y-3'>
                     <ChainRow
-                      label='互补链 (5′ → 3′)'
+                      label='互补链 (3′ → 5′)'
                       value={result.complement}
                       onCopy={() => handleCopy(result.complement, '互补链')}
                     />
@@ -440,23 +520,32 @@ export function SequenceAnalysisPage() {
             title='计算说明'
             description='面向初高中生物知识的快速对照'
           >
-            <div className='grid gap-4 text-sm sm:grid-cols-3'>
+            <div className='grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4'>
               <div className='space-y-1'>
                 <p className='font-medium'>碱基互补配对</p>
                 <p className='text-xs leading-relaxed text-muted-foreground'>
-                  A 与 T 配对，G 与 C 配对。互补链按此规则逐位替换。
+                  A 与 T 配对，G 与 C 配对。互补链按此规则逐位替换，得到与输入链反向平行的
+                  3′→5′ 链。
                 </p>
               </div>
               <div className='space-y-1'>
                 <p className='font-medium'>反向互补</p>
                 <p className='text-xs leading-relaxed text-muted-foreground'>
-                  先求互补链，再整体反向，常用于表示 DNA 双链的另一条链。
+                  先求互补链，再整体反向，用于表示 DNA 双链中方向相反的另一条链。
                 </p>
               </div>
               <div className='space-y-1'>
                 <p className='font-medium'>转录为 RNA</p>
                 <p className='text-xs leading-relaxed text-muted-foreground'>
-                  将序列中的 T 替换为 U，得到对应的 RNA 序列。
+                  以输入的 5′→3′ 序列逐位把 T 替换为 U，得到同向的 RNA（相当于编码链的
+                  RNA 版本）；不会自动取反向互补链。
+                </p>
+              </div>
+              <div className='space-y-1'>
+                <p className='font-medium'>模糊碱基 N</p>
+                <p className='text-xs leading-relaxed text-muted-foreground'>
+                  N 表示未知碱基，会单独计数并计入序列长度，但不计入 GC / AT
+                  的分母；转换链中保持为 N。
                 </p>
               </div>
             </div>

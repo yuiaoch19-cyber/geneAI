@@ -15,9 +15,9 @@ export type SequenceIssue = {
 }
 
 export type NormalizedSequence = {
-  /** Uppercase sequence with whitespace, digits, dashes and FASTA headers removed */
+  /** Uppercase sequence with whitespace and FASTA headers removed */
   sequence: string
-  /** Name taken from the first FASTA header, when present */
+  /** Header text taken from the single FASTA record, when present */
   name?: string
   issue?: SequenceIssue
 }
@@ -36,6 +36,12 @@ export type SequenceAnalysis = {
   issue?: SequenceIssue
 }
 
+/** Kept in sync with `MAX_SEQUENCE_LENGTH` in server/app/config.py. */
+export const MAX_SEQUENCE_LENGTH = 100_000
+
+/** FASTA uploads larger than this are rejected before reading the file. */
+export const MAX_FASTA_BYTES = 2 * 1024 * 1024
+
 const BASE_COMPLEMENT: Record<DnaBase, DnaBase> = {
   A: 'T',
   T: 'A',
@@ -44,47 +50,112 @@ const BASE_COMPLEMENT: Record<DnaBase, DnaBase> = {
   N: 'N',
 }
 
+const AMBIGUOUS_BASES = 'RYSWKMBDHV'
+
 /**
  * Normalize raw user input into a plain DNA string.
  *
- * Rules (must stay in sync with `server/app/services/sequence.py`):
- * 1. Drop `>` header lines, whitespace, digits and dashes.
- * 2. Uppercase.
- * 3. Only A/T/G/C/N are accepted; `U` gets a dedicated hint.
+ * Rules (must stay in sync with `server/app/services/dna.py`):
+ * 1. A single optional FASTA header (`>name`) is accepted; multiple headers are
+ *    rejected instead of silently merging two records.
+ * 2. Whitespace and line breaks are ignored; lowercase is uppercased.
+ * 3. Digits, gaps, U and ambiguous IUPAC bases are reported as errors rather
+ *    than dropped, so a malformed paste cannot silently change the result.
+ * 4. Only A/T/G/C/N are accepted. N is counted separately and excluded from
+ *    the GC/AT denominator.
  */
 export function normalizeSequence(raw: string): NormalizedSequence {
   const lines = raw.split(/\r?\n/)
   let name: string | undefined
+  let headerCount = 0
   const chunks: string[] = []
 
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) continue
     if (trimmed.startsWith('>')) {
-      name ??= trimmed.slice(1).trim() || undefined
+      headerCount += 1
+      if (headerCount > 1) {
+        return {
+          sequence: '',
+          issue: {
+            message:
+              '仅支持单条 FASTA 记录：检测到多个以 “>” 开头的标题行，请合并为一条后重试。',
+          },
+        }
+      }
+      name = trimmed.slice(1).trim() || undefined
       continue
     }
     chunks.push(trimmed)
   }
 
-  const sequence = chunks
-    .join('')
-    .replace(/[\s\d-]/g, '')
-    .toUpperCase()
+  const sequence = chunks.join('').replace(/\s+/g, '').toUpperCase()
 
   if (!sequence) {
-    return { sequence, name, issue: { message: '请输入 DNA 序列。' } }
+    return {
+      sequence,
+      name,
+      issue: {
+        message:
+          headerCount > 0
+            ? 'FASTA 文件中没有序列行：标题行之后需要至少一个碱基。'
+            : '请输入 DNA 序列。',
+      },
+    }
+  }
+
+  if (sequence.length > MAX_SEQUENCE_LENGTH) {
+    return {
+      sequence,
+      name,
+      issue: {
+        message: `序列长度为 ${sequence.length.toLocaleString('en-US')} bp，超过 ${MAX_SEQUENCE_LENGTH.toLocaleString('en-US')} bp 上限。`,
+      },
+    }
   }
 
   for (let index = 0; index < sequence.length; index += 1) {
     const base = sequence[index]
+    const position = index + 1
+
     if (base === 'U') {
       return {
         sequence,
         name,
         issue: {
-          message: `第 ${index + 1} 位检测到 U（尿嘧啶）。本工具分析 DNA 序列，请先将 RNA 逆转录为 DNA。`,
-          position: index + 1,
+          message: `第 ${position} 位检测到 U（尿嘧啶）。本工具分析 DNA 序列，请先将 RNA 逆转录为 DNA。`,
+          position,
+        },
+      }
+    }
+    if (base === '-') {
+      return {
+        sequence,
+        name,
+        issue: {
+          message: `第 ${position} 位出现 “-”（比对缺口）。本工具只分析未比对的原始序列，请先移除缺口字符。`,
+          position,
+        },
+      }
+    }
+    if (/\d/.test(base)) {
+      return {
+        sequence,
+        name,
+        issue: {
+          message: `第 ${position} 位出现数字 “${base}”。请删除序列中的编号后再试。`,
+          position,
+        },
+      }
+    }
+    if (AMBIGUOUS_BASES.includes(base)) {
+      return {
+        sequence,
+        name,
+        issue: {
+          message: `第 ${position} 位出现模糊碱基 “${base}”。当前仅支持 A / T / G / C / N；N 会单独计数且不参与 GC / AT 计算。`,
+          position,
         },
       }
     }
@@ -93,8 +164,8 @@ export function normalizeSequence(raw: string): NormalizedSequence {
         sequence,
         name,
         issue: {
-          message: `第 ${index + 1} 位出现非法字符 “${base}”，仅支持 A / T / G / C / N。`,
-          position: index + 1,
+          message: `第 ${position} 位出现非法字符 “${base}”，仅支持 A / T / G / C / N。`,
+          position,
         },
       }
     }
@@ -159,8 +230,8 @@ export function transcribe(sequence: string): string {
 }
 
 /**
- * Local preview used by the input panel. The backend remains the source of
- * truth once the API is wired; both implementations share the same rules.
+ * Local analysis used by the input preview and the analysis page. The backend
+ * re-runs the same rules on save and remains the source of truth for storage.
  */
 export function analyzeSequence(raw: string): SequenceAnalysis {
   const { sequence, name, issue } = normalizeSequence(raw)
