@@ -145,6 +145,10 @@ def test_history_list_search_and_pagination(client):
     assert search.json()["total"] == 1
     assert search.json()["items"][0]["sequence_name"] == "样本 1"
 
+    light = client.get("/api/history", params={"include_sequence": False})
+    assert light.json()["items"][0]["original_sequence"] == ""
+    assert light.json()["items"][0]["sequence_length"] == 4
+
 
 def test_history_delete(client):
     created = client.post(

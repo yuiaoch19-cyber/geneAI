@@ -86,6 +86,7 @@ def list_history(
     q: str | None = Query(default=None, max_length=120),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    include_sequence: bool = Query(default=True),
     db: Session = Depends(get_db),
 ) -> HistoryPage:
     statement = select(AnalysisRecord)
@@ -108,8 +109,14 @@ def list_history(
     ).all()
 
     pages = (total + page_size - 1) // page_size if total else 0
+    items = [to_record(row) for row in rows]
+    if not include_sequence:
+        # 列表用于统计/选择时不必传回完整序列，避免动辄数百 KB 的响应。
+        items = [
+            item.model_copy(update={"original_sequence": ""}) for item in items
+        ]
     return HistoryPage(
-        items=[to_record(row) for row in rows],
+        items=items,
         total=total,
         page=page,
         page_size=page_size,

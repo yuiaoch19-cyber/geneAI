@@ -5,6 +5,7 @@ import {
   complement,
   countBases,
   gcContent,
+  gcWindows,
   MAX_SEQUENCE_LENGTH,
   normalizeSequence,
   reverseComplement,
@@ -147,6 +148,37 @@ describe('strand conversions', () => {
   it('transcribes by replacing T with U on the same strand', () => {
     expect(transcribe('ATGC')).toBe('AUGC')
     expect(transcribe('TTAA')).toBe('UUAA')
+  })
+})
+
+describe('gcWindows', () => {
+  it('returns GC percentages for every complete window', () => {
+    expect(gcWindows('ATGCATGC', 2, 2)).toEqual([
+      { start: 0, end: 2, gc: 0 },
+      { start: 2, end: 4, gc: 100 },
+      { start: 4, end: 6, gc: 0 },
+      { start: 6, end: 8, gc: 100 },
+    ])
+  })
+
+  it('drops the trailing bases that do not fill a window', () => {
+    const points = gcWindows('ATGCATGCA', 4, 4)
+    expect(points).toHaveLength(2)
+    expect(points[1]).toEqual({ start: 4, end: 8, gc: 50 })
+  })
+
+  it('excludes N from the GC denominator but keeps it in the window', () => {
+    expect(gcWindows('ATNG', 2, 2)).toEqual([
+      { start: 0, end: 2, gc: 0 },
+      { start: 2, end: 4, gc: 100 },
+    ])
+  })
+
+  it('returns no windows for invalid parameters', () => {
+    expect(gcWindows('ATGC', 0, 1)).toEqual([])
+    expect(gcWindows('ATGC', 2, 0)).toEqual([])
+    expect(gcWindows('ATGC', 2.5, 1)).toEqual([])
+    expect(gcWindows('ATGC', 5, 1)).toEqual([])
   })
 })
 

@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react'
-import * as echarts from 'echarts/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
+  MarkLineComponent,
   TitleComponent,
   TooltipComponent,
 } from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+import * as echarts from 'echarts/core'
 import type { EChartsCoreOption } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
 import { cn } from '@/lib/utils'
 
 echarts.use([
@@ -17,6 +18,7 @@ echarts.use([
   PieChart,
   GridComponent,
   LegendComponent,
+  MarkLineComponent,
   TitleComponent,
   TooltipComponent,
   CanvasRenderer,
@@ -29,7 +31,12 @@ type EChartProps = {
   ariaLabel?: string
 }
 
-export function EChart({ option, height = 280, className, ariaLabel }: EChartProps) {
+export function EChart({
+  option,
+  height = 280,
+  className,
+  ariaLabel,
+}: EChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<echarts.ECharts | null>(null)
 

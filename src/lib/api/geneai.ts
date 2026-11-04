@@ -154,12 +154,14 @@ export async function listAnalyses(
     q?: string
     page?: number
     pageSize?: number
+    includeSequence?: boolean
   } = {}
 ): Promise<AnalysisPage> {
   const search = new URLSearchParams()
   if (params.q) search.set('q', params.q)
   search.set('page', String(params.page ?? 1))
   search.set('page_size', String(params.pageSize ?? 10))
+  if (params.includeSequence === false) search.set('include_sequence', 'false')
 
   const raw = await api.get<RawPage>(`/history?${search.toString()}`)
   return {

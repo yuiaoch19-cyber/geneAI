@@ -1,3 +1,5 @@
+import type { GcWindowPoint } from '@/types/api'
+
 export type DnaBase = 'A' | 'T' | 'G' | 'C' | 'N'
 
 export type BaseCounts = {
@@ -253,6 +255,31 @@ export function analyzeSequence(raw: string): SequenceAnalysis {
 
 export function formatPercent(value: number, digits = 1): string {
   return `${value.toFixed(digits)}%`
+}
+
+/**
+ * Sliding-window GC content. Mirrors `server/app/services/dna.py::gc_windows`:
+ * only complete windows are produced, so a trailing partial window is ignored.
+ * Coordinates are 0-based, `end` exclusive.
+ */
+export function gcWindows(
+  sequence: string,
+  window: number,
+  step: number
+): GcWindowPoint[] {
+  if (!Number.isInteger(window) || !Number.isInteger(step)) return []
+  if (window <= 0 || step <= 0 || window > sequence.length) return []
+
+  const points: GcWindowPoint[] = []
+  for (let start = 0; start <= sequence.length - window; start += step) {
+    const chunk = sequence.slice(start, start + window)
+    points.push({
+      start,
+      end: start + window,
+      gc: gcContent(countBases(chunk)),
+    })
+  }
+  return points
 }
 
 export function formatNumber(value: number): string {

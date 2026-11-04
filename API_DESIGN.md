@@ -119,7 +119,7 @@ allow_headers = ["*"]
 | GET    | `/api/comparisons/{id}`        | 比对详情（含对齐与差异） |
 | DELETE | `/api/comparisons/{id}`        | 删除比对记录             |
 
-规划中：`GET /api/history/{id}/report`（PDF 报告，阶段 7）。
+规划中：`GET /api/history/{id}/report`（PDF 报告，阶段 8）。
 
 ---
 
@@ -269,11 +269,12 @@ FASTA 头取 `record.id` 的首个空白词，截断到 120 字符；无头时�
 
 查询参数：
 
-| 参数        | 类型   | 默认 | 说明                                   |
-| ----------- | ------ | ---- | -------------------------------------- |
-| `q`         | string | —    | 匹配 `sequence_name` 或 `note`（LIKE） |
-| `page`      | int    | 1    | 页码                                   |
-| `page_size` | int    | 10   | 1–100                                  |
+| 参数               | 类型   | 默认 | 说明                                                 |
+| ------------------ | ------ | ---- | ---------------------------------------------------- |
+| `q`                | string | —    | 匹配 `sequence_name` 或 `note`（LIKE）               |
+| `page`             | int    | 1    | 页码                                                 |
+| `page_size`        | int    | 10   | 1–100                                                |
+| `include_sequence` | bool   | true | 是否返回完整 `original_sequence`；列表拉取建议 false |
 
 响应 `200`：
 
@@ -296,7 +297,7 @@ FASTA 头取 `record.id` 的首个空白词，截断到 120 字符；无头时�
 }
 ```
 
-按 `created_at DESC, id DESC` 排序。
+按 `created_at DESC, id DESC` 排序。`include_sequence=false` 时列表项仍保留 `sequence_length` 等统计字段，只把 `original_sequence` 置为空字符串，供图表选择器与历史列表减少响应体积。
 
 ### 5.3 `GET /api/history/{id}`
 
