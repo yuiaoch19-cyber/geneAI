@@ -35,3 +35,13 @@ dist-ssr
 # Vitest artifacts (browser screenshots/attachments)
 **/__screenshots__/
 .vitest-attachments/
+
+# Python backend
+server/.venv/
+server/geneai.db
+__pycache__/
+*.pyc
+server/.pytest_cache/
+
+# Local scratch files
+.tmp/

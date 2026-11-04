@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { Copy, Dna, FlaskConical, Info } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Check, Copy, Dna, FlaskConical, Info, Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { createAnalysis } from '@/lib/api/geneai'
+import { statsKeys } from '@/hooks/use-stats-overview'
 import { DEMO_ANALYSIS } from '@/lib/demo-sequences'
 import {
   analyzeSequence,
   formatNumber,
   formatPercent,
+  normalizeSequence,
   type BaseCounts,
   type SequenceAnalysis,
 } from '@/lib/dna'
@@ -123,14 +127,61 @@ function ChainRow({
   )
 }
 
+type PendingFasta = {
+  name: string
+  content: string
+  analysis: SequenceAnalysis
+}
+
+function readPendingFasta(): PendingFasta | null {
+  const pending = sessionStorage.getItem('geneai:pending-fasta')
+  if (!pending) return null
+  sessionStorage.removeItem('geneai:pending-fasta')
+  try {
+    const parsed = JSON.parse(pending) as { name?: string; content?: string }
+    if (!parsed.content) return null
+    const header = parsed.content.match(/^\s*>\s*([^\r\n]+)/)
+    const headerName = header?.[1]?.trim().split(/\s+/)[0]
+    return {
+      name:
+        headerName ||
+        (parsed.name ? parsed.name.replace(/\.[^.]+$/, '') : ''),
+      content: normalizeSequence(parsed.content).sequence,
+      analysis: analyzeSequence(parsed.content),
+    }
+  } catch {
+    return null
+  }
+}
+
 export function SequenceAnalysisPage() {
-  const [name, setName] = useState('')
-  const [raw, setRaw] = useState('')
-  const [result, setResult] = useState<SequenceAnalysis | null>(null)
+  const [pending] = useState(readPendingFasta)
+  const [name, setName] = useState(pending?.name ?? '')
+  const [raw, setRaw] = useState(pending?.content ?? '')
+  const [result, setResult] = useState<SequenceAnalysis | null>(
+    pending?.analysis ?? null
+  )
+  const [savedId, setSavedId] = useState<number | null>(null)
+
+  const queryClient = useQueryClient()
+
+  const saveMutation = useMutation({
+    mutationFn: (input: { name: string; sequence: string }) =>
+      createAnalysis({ name: input.name, sequence: input.sequence }),
+    onSuccess: (record) => {
+      setSavedId(record.id)
+      toast.success(`已保存到历史记录：#${record.id}`)
+      void queryClient.invalidateQueries({ queryKey: statsKeys.overview })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || '保存失败，请稍后重试。')
+    },
+  })
 
   const handleAnalyze = () => {
     const analysis = analyzeSequence(raw)
     setResult(analysis)
+    setSavedId(null)
     if (analysis.issue) {
       toast.error(analysis.issue.message)
       return
@@ -138,6 +189,15 @@ export function SequenceAnalysisPage() {
     if (!name && analysis.name) setName(analysis.name)
     toast.success(`分析完成：${formatNumber(analysis.length)} bp`)
   }
+
+  const handleSave = () => {
+    if (!result || result.issue) return
+    saveMutation.mutate({
+      name: name.trim() || result.name || '未命名分析',
+      sequence: result.sequence,
+    })
+  }
+
 
   const handleCopy = async (text: string, label: string) => {
     try {
@@ -152,12 +212,14 @@ export function SequenceAnalysisPage() {
     setRaw(DEMO_ANALYSIS.sequence)
     setName(DEMO_ANALYSIS.label)
     setResult(null)
+    setSavedId(null)
   }
 
   const reset = () => {
     setRaw('')
     setName('')
     setResult(null)
+    setSavedId(null)
   }
 
   const showResult = result !== null && result.length > 0
@@ -225,9 +287,13 @@ export function SequenceAnalysisPage() {
                 value={raw}
                 onChange={setRaw}
                 onLoadDemo={loadDemo}
-                onFileLoaded={({ name: fileName }) => {
+                onFileLoaded={({ name: fileName, text }) => {
                   if (!name) {
-                    setName(fileName.replace(/\.[^.]+$/, ''))
+                    const header = text
+                      .match(/^\s*>\s*([^\r\n]+)/)?.[1]
+                      ?.trim()
+                      .split(/\s+/)[0]
+                    setName(header || fileName.replace(/\.[^.]+$/, ''))
                   }
                 }}
                 hint='仅支持 A / T / G / C / N；FASTA 头、空白、换行与数字会被自动忽略。'
@@ -237,6 +303,26 @@ export function SequenceAnalysisPage() {
                 <Button type='button' onClick={handleAnalyze}>
                   <Dna className='size-4' />
                   分析序列
+                </Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleSave}
+                  disabled={
+                    !showResult ||
+                    !!result?.issue ||
+                    saveMutation.isPending ||
+                    savedId !== null
+                  }
+                >
+                  {saveMutation.isPending ? (
+                    <Loader2 className='size-4 animate-spin' />
+                  ) : savedId !== null ? (
+                    <Check className='size-4' />
+                  ) : (
+                    <Save className='size-4' />
+                  )}
+                  {savedId !== null ? '已保存' : '保存到历史'}
                 </Button>
                 <Button
                   type='button'
@@ -267,7 +353,14 @@ export function SequenceAnalysisPage() {
               </div>
               {showResult && !result?.issue ? (
                 <Badge variant='secondary' className='text-[10px] font-normal'>
-                  预览
+                  {savedId !== null ? (
+                    <span className='flex items-center gap-1'>
+                      <Check className='size-3' />
+                      已保存 #{savedId}
+                    </span>
+                  ) : (
+                    '预览'
+                  )}
                 </Badge>
               ) : null}
             </div>
@@ -333,9 +426,8 @@ export function SequenceAnalysisPage() {
 
                   <p className='flex items-start gap-1.5 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground'>
                     <Info className='mt-0.5 size-3.5 shrink-0' />
-                    当前为本地预览：链转换与 GC
-                    计算在浏览器内完成。保存到历史、后端校验与 PDF
-                    报告将在后续阶段接入。
+                    计算在浏览器内即时完成；点击「保存到历史」时后端会重新校验序列并写入本机
+                    SQLite，随后可在 Dashboard 与历史记录中查看。
                   </p>
                 </div>
               )}

@@ -1,5 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
-import { Monitor, Palette } from 'lucide-react'
+import { Database, Palette } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { AppHeader } from '@/components/layout/app-header'
 import { Main } from '@/components/layout/main'
@@ -12,9 +12,9 @@ const sidebarNavItems = [
     icon: <Palette size={18} />,
   },
   {
-    title: '显示',
+    title: '本地工作区',
     href: '/settings/display',
-    icon: <Monitor size={18} />,
+    icon: <Database size={18} />,
   },
 ]
 

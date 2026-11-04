@@ -23,9 +23,24 @@ export default defineConfig({
   },
   server: {
     // Atomic editors write through dot-prefixed temp directories; watching them
-    // throws EBUSY on Windows and crashes the dev server.
+    // throws EBUSY on Windows and crashes the dev server. The Python venv, the
+    // local pnpm store and build output hold tens of thousands of files and can
+    // stall the watcher (requests hang while the tree is crawled).
     watch: {
-      ignored: ['**/.*.tmpdir/**'],
+      ignored: [
+        '**/.*.tmpdir/**',
+        '**/server/**',
+        '**/.pnpm-store/**',
+        '**/dist/**',
+        '**/.tmp/**',
+      ],
+    },
+    proxy: {
+      // 开发期把 REST 请求转给本机 FastAPI，避免浏览器 CORS 配置负担。
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
     },
   },
   test: {

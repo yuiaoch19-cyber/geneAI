@@ -1,6 +1,11 @@
 import { useMemo, useRef } from 'react'
 import { CircleAlert, Eraser, FlaskConical, Upload } from 'lucide-react'
-import { analyzeSequence, formatNumber, formatPercent } from '@/lib/dna'
+import {
+  analyzeSequence,
+  formatNumber,
+  formatPercent,
+  normalizeSequence,
+} from '@/lib/dna'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -42,7 +47,7 @@ export function SequenceInput({
     if (!file) return
     const text = await file.text()
     onFileLoaded?.({ name: file.name, text })
-    onChange(text)
+    onChange(normalizeSequence(text).sequence)
   }
 
   return (

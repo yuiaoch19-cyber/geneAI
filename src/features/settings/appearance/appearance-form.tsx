@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { ChevronDownIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { fonts } from '@/config/fonts'
-import { showSubmittedData } from '@/lib/show-submitted-data'
 import { cn } from '@/lib/utils'
 import { useFont } from '@/context/font-provider'
 import { useTheme } from '@/context/theme-provider'
@@ -26,11 +26,16 @@ const appearanceFormSchema = z.object({
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
 
+const fontLabels: Record<string, string> = {
+  inter: 'Inter',
+  manrope: 'Manrope',
+  system: '系统默认',
+}
+
 export function AppearanceForm() {
   const { font, setFont } = useFont()
   const { theme, setTheme } = useTheme()
 
-  // This can come from your database or API.
   const defaultValues: Partial<AppearanceFormValues> = {
     theme: theme as 'light' | 'dark',
     font,
@@ -45,7 +50,7 @@ export function AppearanceForm() {
     if (data.font != font) setFont(data.font)
     if (data.theme != theme) setTheme(data.theme)
 
-    showSubmittedData(data)
+    toast.success('外观设置已保存')
   }
 
   return (
@@ -56,28 +61,28 @@ export function AppearanceForm() {
           name='font'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Font</FormLabel>
+              <FormLabel>界面字体</FormLabel>
               <div className='relative w-max'>
                 <FormControl>
                   <select
                     className={cn(
                       buttonVariants({ variant: 'outline' }),
-                      'w-50 appearance-none font-normal capitalize',
+                      'w-50 appearance-none font-normal',
                       'dark:bg-background dark:hover:bg-background'
                     )}
                     {...field}
                   >
                     {fonts.map((font) => (
                       <option key={font} value={font}>
-                        {font}
+                        {fontLabels[font] ?? font}
                       </option>
                     ))}
                   </select>
                 </FormControl>
                 <ChevronDownIcon className='absolute inset-e-3 top-2.5 h-4 w-4 opacity-50' />
               </div>
-              <FormDescription className='font-manrope'>
-                Set the font you want to use in the dashboard.
+              <FormDescription>
+                选择整个平台使用的字体，保存后立即生效。
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -88,9 +93,9 @@ export function AppearanceForm() {
           name='theme'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Theme</FormLabel>
+              <FormLabel>主题模式</FormLabel>
               <FormDescription>
-                Select the theme for the dashboard.
+                选择浅色或深色外观，也可以随时从右上角切换。
               </FormDescription>
               <FormMessage />
               <RadioGroup
@@ -99,7 +104,7 @@ export function AppearanceForm() {
                 className='grid max-w-md grid-cols-2 gap-8 pt-2'
               >
                 <FormItem>
-                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
+                  <FormLabel className='flex flex-col [&:has([data-state=checked])>div]:border-primary'>
                     <FormControl>
                       <RadioGroupItem value='light' className='sr-only' />
                     </FormControl>
@@ -120,12 +125,12 @@ export function AppearanceForm() {
                       </div>
                     </div>
                     <span className='block w-full p-2 text-center font-normal'>
-                      Light
+                      浅色
                     </span>
                   </FormLabel>
                 </FormItem>
                 <FormItem>
-                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
+                  <FormLabel className='flex flex-col [&:has([data-state=checked])>div]:border-primary'>
                     <FormControl>
                       <RadioGroupItem value='dark' className='sr-only' />
                     </FormControl>
@@ -146,7 +151,7 @@ export function AppearanceForm() {
                       </div>
                     </div>
                     <span className='block w-full p-2 text-center font-normal'>
-                      Dark
+                      深色
                     </span>
                   </FormLabel>
                 </FormItem>
@@ -155,7 +160,7 @@ export function AppearanceForm() {
           )}
         />
 
-        <Button type='submit'>Update preferences</Button>
+        <Button type='submit'>保存外观设置</Button>
       </form>
     </Form>
   )

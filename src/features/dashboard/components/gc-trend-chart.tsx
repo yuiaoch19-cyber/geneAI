@@ -1,0 +1,85 @@
+import { useMemo } from 'react'
+import type { EChartsCoreOption } from 'echarts/core'
+import type { GcTrendPoint } from '@/types/api'
+import { chartTheme, formatAxisTime } from '@/lib/chart-theme'
+import { useTheme } from '@/context/theme-provider'
+import { EChart } from '@/components/geneai/echart'
+
+type GcTrendChartProps = {
+  points: GcTrendPoint[]
+  height?: number
+}
+
+export function GcTrendChart({ points, height = 260 }: GcTrendChartProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+
+  const option = useMemo<EChartsCoreOption>(() => {
+    const theme = chartTheme(isDark)
+    return {
+      grid: { left: 4, right: 12, top: 28, bottom: 4, containLabel: true },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: theme.tooltipBackground,
+        borderColor: theme.tooltipBorder,
+        textStyle: { color: theme.tooltipText, fontSize: 12 },
+        formatter: (params: unknown) => {
+          const items = params as {
+            dataIndex: number
+            axisValue: string
+            data: { value: number; name: string }
+          }[]
+          if (!items.length) return ''
+          const point = points[items[0].dataIndex]
+          return [
+            `<span style="color:${theme.text}">${items[0].axisValue}</span>`,
+            `<b>${point.gcContent.toFixed(1)}%</b> GC`,
+            `<span style="color:${theme.text}">${point.name}</span>`,
+          ].join('<br/>')
+        },
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: points.map((point) => formatAxisTime(point.createdAt)),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: theme.axisLine } },
+        axisLabel: {
+          color: theme.text,
+          fontSize: 10,
+          hideOverlap: true,
+        },
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 100,
+        splitNumber: 4,
+        axisLabel: {
+          color: theme.text,
+          fontSize: 10,
+          formatter: '{value}%',
+        },
+        splitLine: { lineStyle: { color: theme.splitLine, type: 'dashed' } },
+      },
+      series: [
+        {
+          type: 'line',
+          smooth: 0.25,
+          symbol: 'circle',
+          symbolSize: 6,
+          showSymbol: points.length <= 24,
+          lineStyle: { width: 2, color: '#12998c' },
+          itemStyle: { color: '#12998c', borderWidth: 2, borderColor: isDark ? '#0b1220' : '#fff' },
+          areaStyle: { color: 'rgba(18, 153, 140, 0.08)' },
+          data: points.map((point) => ({
+            value: point.gcContent,
+            name: point.name,
+          })),
+        },
+      ],
+    }
+  }, [points, isDark])
+
+  return <EChart option={option} height={height} ariaLabel='GC 含量趋势折线图' />
+}
