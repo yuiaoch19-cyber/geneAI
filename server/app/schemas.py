@@ -5,19 +5,56 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-class AnalysisCreate(BaseModel):
-    name: str | None = Field(default=None, max_length=120)
-    sequence: str = Field(min_length=1)
+class AnalyzeRequest(BaseModel):
+    sequence: str = Field(min_length=1, description="DNA 序列，支持 FASTA 文本")
+    sequence_name: str | None = Field(default=None, max_length=120)
+
+
+class BaseCounts(BaseModel):
+    a: int
+    t: int
+    g: int
+    c: int
+    n: int
+
+
+class AnalyzeResult(BaseModel):
+    """一次分析的算法结果（不包含数据库字段）。"""
+
+    sequence: str
+    sequence_length: int
+    counts: BaseCounts
+    gc_content: float
+    at_content: float
+    complement: str
+    reverse_complement: str
+    rna: str
+
+
+class AnalyzeOut(AnalyzeResult):
+    sequence_name: str | None = None
+    algorithm_version: str
+
+
+class FastaOut(BaseModel):
+    filename: str
+    sequence_name: str
+    sequence: str
+    analysis: AnalyzeOut
+
+
+class HistoryCreate(BaseModel):
+    sequence_name: str | None = Field(default=None, max_length=120)
+    original_sequence: str = Field(min_length=1)
     source: Literal["manual", "fasta", "demo"] = "manual"
     note: str | None = Field(default=None, max_length=500)
-    save: bool = True
 
 
-class AnalysisOut(BaseModel):
+class HistoryRecord(BaseModel):
     id: int
-    name: str
-    sequence: str
-    length: int
+    sequence_name: str
+    sequence_length: int
+    original_sequence: str
     a_count: int
     t_count: int
     g_count: int
@@ -30,23 +67,16 @@ class AnalysisOut(BaseModel):
     rna: str
     source: str
     note: str | None
+    algorithm_version: str
     created_at: str
 
 
-class AnalysisPage(BaseModel):
-    items: list[AnalysisOut]
+class HistoryPage(BaseModel):
+    items: list[HistoryRecord]
     total: int
     page: int
     page_size: int
     pages: int
-
-
-class BaseCounts(BaseModel):
-    a: int
-    t: int
-    g: int
-    c: int
-    n: int
 
 
 class GcPoint(BaseModel):

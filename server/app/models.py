@@ -6,12 +6,14 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     Float,
+    Index,
     Integer,
     String,
     Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
+from .config import ALGORITHM_VERSION
 from .db import Base
 
 
@@ -19,24 +21,28 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class Analysis(Base):
-    __tablename__ = "analyses"
+class AnalysisRecord(Base):
+    """一次 DNA 序列分析的完整记录。"""
+
+    __tablename__ = "analysis_records"
     __table_args__ = (
         CheckConstraint(
-            "a_count + t_count + g_count + c_count + n_count = length",
-            name="ck_analyses_counts_sum",
+            "a_count + t_count + g_count + c_count + n_count = sequence_length",
+            name="ck_analysis_records_counts_sum",
         ),
         CheckConstraint(
             "source IN ('manual', 'fasta', 'demo')",
-            name="ck_analyses_source",
+            name="ck_analysis_records_source",
         ),
+        Index("ix_analysis_records_created_at", "created_at"),
+        Index("ix_analysis_records_sequence_hash", "sequence_hash"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), nullable=False)
-    sequence: Mapped[str] = mapped_column(Text, nullable=False)
+    sequence_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    sequence_length: Mapped[int] = mapped_column(Integer, nullable=False)
+    original_sequence: Mapped[str] = mapped_column(Text, nullable=False)
     sequence_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    length: Mapped[int] = mapped_column(Integer, nullable=False)
 
     a_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     t_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -52,6 +58,9 @@ class Analysis(Base):
 
     source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    algorithm_version: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=ALGORITHM_VERSION
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow
     )

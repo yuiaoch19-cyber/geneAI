@@ -1,119 +1,132 @@
-# Shadcn Admin Dashboard
+# GeneAI · DNA 智能序列分析与可视化平台
 
-Admin Dashboard UI crafted with Shadcn and Vite. Built with responsiveness and accessibility in mind.
+面向课程展示的 DNA 序列分析平台。输入或上传 DNA 序列，即可完成碱基组成、GC/AT 含量、互补链、反向互补链、RNA 转录与序列差异比较，并把分析结果保存在本机 SQLite 中。
 
-![alt text](public/images/shadcn-admin.png)
+前端基于 **shadcn-admin** 二次开发，保留下游的技术栈、组件体系与路由方案。
 
-[![Sponsored by Clerk](https://img.shields.io/badge/Sponsored%20by-Clerk-5b6ee1?logo=clerk)](https://go.clerk.com/GttUAaK)
+![DNA 分析页面](docs/screenshots/phase4-analysis-result.png)
 
-I've been creating dashboard UIs at work and for my personal projects. I always wanted to make a reusable collection of dashboard UI for future projects; and here it is now. While I've created a few custom components, some of the code is directly adapted from ShadcnUI examples.
+## 功能
 
-> This is not a starter project (template) though. I'll probably make one in the future.
+| 模块           | 状态      | 说明                                                                         |
+| -------------- | --------- | ---------------------------------------------------------------------------- |
+| Dashboard 总览 | ✅        | 真实统计、碱基环形/柱状图、GC 趋势、最近记录与详情、快捷操作                 |
+| DNA 序列分析   | ✅        | 手动/FASTA 输入、严格校验、A/T/G/C/N 统计、GC/AT、三条转换链、复制、保存历史 |
+| 序列差异比较   | 🚧 阶段 6 | 页面骨架与输入校验已完成，比对引擎待接入                                     |
+| 数据可视化     | 🚧 阶段 6 | 页面骨架与口径说明已完成，ECharts 待接数据                                   |
+| 历史记录与报告 | 🚧 阶段 7 | 后端 CRUD 已就绪，列表页与 PDF 待完成                                        |
+| 系统设置       | ✅        | 外观/主题、本地工作区信息（中文）                                            |
 
-## Features
+计算口径：GC = (G + C) / (A + T + G + C)，N 计入长度与计数但不进分母；RNA 为同向转录（逐位 T→U）。所有演示数据均明确标注「演示数据」，不会写入数据库。
 
-- Light/dark mode
-- Responsive
-- Accessible
-- With built-in Sidebar component
-- Global search command
-- 10+ pages
-- Extra custom components
-- RTL support
+## 技术栈
 
-<details>
-<summary>Customized Components (click to expand)</summary>
+- 前端：React 19、Vite 8、TypeScript 6、Tailwind CSS 4、TanStack Router/Query/Table、shadcn/ui、ECharts、Lucide
+- 后端：Python 3.12、FastAPI、SQLAlchemy 2、Biopython、SQLite
+- 报告：ReportLab（阶段 7）
 
-This project uses Shadcn UI components, but some have been slightly modified for better RTL (Right-to-Left) support and other improvements. These customized components differ from the original Shadcn UI versions.
+## 目录
 
-If you want to update components using the Shadcn CLI (e.g., `npx shadcn@latest add <component>`), it's generally safe for non-customized components. For the listed customized ones, you may need to manually merge changes to preserve the project's modifications and avoid overwriting RTL support or other updates.
-
-> If you don't require RTL support, you can safely update the 'RTL Updated Components' via the Shadcn CLI, as these changes are primarily for RTL compatibility. The 'Modified Components' may have other customizations to consider.
-
-### Modified Components
-
-- scroll-area
-- sonner
-- separator
-
-### RTL Updated Components
-
-- alert-dialog
-- calendar
-- command
-- dialog
-- dropdown-menu
-- select
-- table
-- sheet
-- sidebar
-- switch
-
-**Notes:**
-
-- **Modified Components**: These have general updates, potentially including RTL adjustments.
-- **RTL Updated Components**: These have specific changes for RTL language support (e.g., layout, positioning).
-- For implementation details, check the source files in `src/components/ui/`.
-- All other Shadcn UI components in the project are standard and can be safely updated via the CLI.
-
-</details>
-
-## Tech Stack
-
-**UI:** [ShadcnUI](https://ui.shadcn.com) (TailwindCSS + RadixUI)
-
-**Build Tool:** [Vite](https://vitejs.dev/)
-
-**Routing:** [TanStack Router](https://tanstack.com/router/latest)
-
-**Type Checking:** [TypeScript](https://www.typescriptlang.org/)
-
-**Linting/Formatting:** [ESLint](https://eslint.org/) & [Prettier](https://prettier.io/)
-
-**Icons:** [Lucide Icons](https://lucide.dev/icons/), [Tabler Icons](https://tabler.io/icons) (Brand icons only)
-
-**Auth (partial):** [Clerk](https://go.clerk.com/GttUAaK)
-
-## Run Locally
-
-Clone the project
-
-```bash
-  git clone https://github.com/satnaing/shadcn-admin.git
+```
+├─ src/                 前端
+│  ├─ features/         页面与业务组件（analysis / dashboard / settings …）
+│  ├─ components/       ui 基础组件 + geneai 业务组件
+│  ├─ lib/              dna.ts 算法、api 客户端、图表主题
+│  ├─ routes/           TanStack Router 文件式路由
+│  └─ styles/           theme.css 设计令牌
+├─ server/              后端
+│  ├─ app/
+│  │  ├─ routers/       analyze / history / stats
+│  │  ├─ services/      dna.py、fasta.py
+│  │  ├─ models.py      AnalysisRecord / Comparison / Meta
+│  │  ├─ schemas.py     请求与响应模型
+│  │  └─ main.py        FastAPI 入口
+│  ├─ tests/            pytest（DNA 算法 + API）
+│  ├─ requirements.txt
+│  └─ .env.example
+├─ docs/screenshots/    各阶段验收截图
+├─ API_DESIGN.md        接口说明
+├─ DATABASE_DESIGN.md   数据库设计
+└─ TEST_PLAN.md         测试计划
 ```
 
-Go to the project directory
+## 快速开始
+
+### 1. 前端
 
 ```bash
-  cd shadcn-admin
+pnpm install
+pnpm dev --host 127.0.0.1 --port 5208
 ```
 
-Install dependencies
+打开 http://127.0.0.1:5208 。Vite 已把 `/api` 代理到 `http://127.0.0.1:8000`。
+
+### 2. 后端
+
+需要 Python 3.12（3.14 下 Biopython 无预编译轮子，会触发源码编译）。
 
 ```bash
-  pnpm install
+cd server
+python -m venv .venv
+.venv/Scripts/activate          # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env            # 可选，按需修改端口/数据库路径
+.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Start the server
+启动后访问 http://127.0.0.1:8000/docs 查看 OpenAPI 文档。首次启动自动建库 `server/geneai.db`。
+
+### 3. 验证
 
 ```bash
-  pnpm run dev
+# 前端
+pnpm test:unit        # DNA 纯函数 25 个用例
+pnpm build
+pnpm lint
+
+# 后端
+cd server
+.venv/Scripts/python.exe -m pytest tests -q   # 30 个用例
 ```
 
-## Sponsoring this project ❤️
+## 环境变量
 
-If you find this project helpful or use this in your own work, consider [sponsoring me](https://github.com/sponsors/satnaing) to support development and maintenance. You can [buy me a coffee](https://buymeacoffee.com/satnaing) as well. Don’t worry, every penny helps. Thank you! 🙏
+后端读取 `server/.env`（不会覆盖真实环境变量），见 `server/.env.example`：
 
-For questions or sponsorship inquiries, feel free to reach out at [satnaingdev@gmail.com](mailto:satnaingdev@gmail.com).
+| 变量                  | 默认                    | 说明                   |
+| --------------------- | ----------------------- | ---------------------- |
+| `GENEAI_DB_PATH`      | `server/geneai.db`      | SQLite 文件            |
+| `DATABASE_URL`        | `sqlite:///…/geneai.db` | 完整连接串，优先级更高 |
+| `MAX_SEQUENCE_LENGTH` | `100000`                | 单条序列上限           |
+| `MAX_UPLOAD_BYTES`    | `2097152`               | FASTA 上传上限         |
+| `CORS_ORIGIN_REGEX`   | localhost 任意端口      | 开发期跨域             |
 
-### Current Sponsor
+前端可选 `VITE_API_BASE_URL`，默认同源 `/api`。
 
-- [Clerk](https://go.clerk.com/GttUAaK) - authentication and user management for the modern web
+## API
 
-## Author
+阶段 5 已实现：
 
-Crafted with 🤍 by [@satnaing](https://github.com/satnaing)
+```
+GET    /api/health
+POST   /api/analyze
+POST   /api/upload/fasta
+POST   /api/history
+GET    /api/history?q=&page=&page_size=
+GET    /api/history/{id}
+DELETE /api/history/{id}
+GET    /api/history/{id}/gc-windows
+GET    /api/stats/overview
+```
 
-## License
+错误统一为 `{ detail, code, field? }`。详见 [API_DESIGN.md](API_DESIGN.md)。
 
-Licensed under the [MIT License](https://choosealicense.com/licenses/mit/)
+## 说明
+
+- 本项目不使用 AI 模型，所有 DNA 计算均由本地算法完成。
+- 序列只保存在本机 SQLite，不上传第三方；日志不打印序列内容。
+- 页面不提供疾病或临床结论，仅用于教学演示。
+
+## 致谢
+
+基于 [satnaing/shadcn-admin](https://github.com/satnaing/shadcn-admin) 二次开发，保留其 MIT License 与组件设计。

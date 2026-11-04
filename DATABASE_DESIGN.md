@@ -1,111 +1,95 @@
-# GeneAI 数据库设计（初稿）
+# GeneAI 数据库设计
 
-| 项目     | 内容                                               |
-| -------- | -------------------------------------------------- |
-| 数据库   | SQLite 3（单文件）                                 |
-| 文件位置 | `server/geneai.db`（可通过 `GENEAI_DB_PATH` 覆盖） |
-| 访问层   | SQLAlchemy 2.x ORM，参数化查询                     |
-| 字符集   | UTF-8                                              |
-| 时间     | UTC，ISO 8601 字符串（`2026-11-04T13:20:00.000Z`） |
-| 状态     | 初稿，阶段 3 落地并在实现中校正                    |
+| 项目     | 内容                                                          |
+| -------- | ------------------------------------------------------------- |
+| 数据库   | SQLite 3（单文件）                                            |
+| 文件位置 | `server/geneai.db`（可用 `GENEAI_DB_PATH` 覆盖）              |
+| 访问层   | SQLAlchemy 2.x ORM，参数化查询                                |
+| 字符集   | UTF-8                                                         |
+| 时间     | 统一以 UTC 写入，接口输出 `...Z` 的 ISO 8601 字符串           |
+| 版本     | 阶段 5 已落地（`APP_VERSION=0.5.0`，`ALGORITHM_VERSION=1.0`） |
 
 ---
 
 ## 1. 设计目标
 
-1. **一次分析一条记录**：结果可追溯、可复现、可导出。
-2. **统计查询高效**：Dashboard 的四个指标与两张图能在单次请求内完成。
-3. **结构简单**：两张业务表 + 一张元数据表，不用复杂关联。
-4. **可迁移**：保留 `schema_version`，后续加字段不需要重建库。
-5. **不存冗余计算结果**：GC 含量等派生值可存（便于 SQL 聚合），但不存前端展示格式。
+1. 一次分析一条记录：结果可追溯、可复现、可导出 PDF。
+2. Dashboard 的统计与图表可在单次请求内完成。
+3. 结构简单：两张业务表 + 一张元数据表，不建外键。
+4. 可增量迁移：启动时自动补列并兼容旧版 `analyses` 表。
+5. 序列原文完整保存；派生字段（GC、三条链）同时入库，便于 SQL 聚合与后续报告。
 
 ---
 
 ## 2. ER 概览
 
 ```
-┌────────────────────┐        ┌──────────────────────────┐
-│ analyses           │        │ comparisons              │
-│ (序列分析记录)      │        │ (序列比对记录)            │
-├────────────────────┤        ├──────────────────────────┤
-│ id PK              │        │ id PK                    │
-│ name               │        │ name                     │
-│ sequence           │        │ reference_sequence       │
-│ sequence_hash      │        │ query_sequence           │
-│ length             │        │ reference_length         │
-│ a_count … n_count  │        │ query_length             │
-│ gc_content         │        │ alignment_score          │
-│ at_content         │        │ identity                 │
-│ complement         │        │ substitutions            │
-│ reverse_complement │        │ insertions               │
-│ rna                │        │ deletions                │
-│ source             │        │ difference_count         │
-│ created_at         │        │ difference_ratio         │
-└────────────────────┘        │ alignment_json           │
-                              │ differences_json         │
-┌────────────────────┐        │ created_at               │
-│ meta               │        └──────────────────────────┘
-│ key PK / value     │
-└────────────────────┘
+┌──────────────────────────┐      ┌──────────────────────────┐
+│ analysis_records (分析)   │      │ comparisons (比对，阶段 6)│
+├──────────────────────────┤      ├──────────────────────────┤
+│ id PK                    │      │ id PK                    │
+│ sequence_name            │      │ name                     │
+│ sequence_length          │      │ reference_sequence       │
+│ original_sequence        │      │ query_sequence           │
+│ sequence_hash            │      │ reference_length         │
+│ a_count … n_count        │      │ query_length             │
+│ gc_content / at_content  │      │ alignment_score          │
+│ complement               │      │ identity                 │
+│ reverse_complement       │      │ substitutions            │
+│ rna                      │      │ insertions / deletions   │
+│ source / note            │      │ difference_*             │
+│ algorithm_version        │      │ alignment_json           │
+│ created_at               │      │ differences_json         │
+└──────────────────────────┘      │ created_at               │
+┌──────────────────────────┐      └──────────────────────────┘
+│ meta (key PK / value)    │
+└──────────────────────────┘
 ```
 
-两表无外键关系（比对不引用分析记录，避免历史记录被删除后比对失效）。需要"从历史带入序列"时由前端复制字符串。
+两表无外键关系：删除分析记录不影响比对记录；比对需要引用序列时由前端复制字符串。
 
 ---
 
 ## 3. 表结构
 
-### 3.1 `analyses` — 序列分析记录
+### 3.1 `analysis_records` — 序列分析记录
 
-| 字段                 | 类型     | 约束                                         | 说明                                       |
-| -------------------- | -------- | -------------------------------------------- | ------------------------------------------ |
-| `id`                 | INTEGER  | PK AUTOINCREMENT                             | 主键                                       |
-| `name`               | TEXT     | NOT NULL, len ≤ 120                          | 记录名，默认 `序列分析 2026-11-04 21:30`   |
-| `sequence`           | TEXT     | NOT NULL, len ≤ 100000                       | 规范化后的序列（大写 ACGTN）               |
-| `sequence_hash`      | TEXT(64) | NOT NULL, index                              | `sha256(sequence)`，用于去重统计与快速检索 |
-| `length`             | INTEGER  | NOT NULL, CHECK > 0                          | 总长度（含 N）                             |
-| `a_count`            | INTEGER  | NOT NULL DEFAULT 0, CHECK ≥ 0                | A 数量                                     |
-| `t_count`            | INTEGER  | NOT NULL DEFAULT 0, CHECK ≥ 0                | T 数量                                     |
-| `g_count`            | INTEGER  | NOT NULL DEFAULT 0, CHECK ≥ 0                | G 数量                                     |
-| `c_count`            | INTEGER  | NOT NULL DEFAULT 0, CHECK ≥ 0                | C 数量                                     |
-| `n_count`            | INTEGER  | NOT NULL DEFAULT 0, CHECK ≥ 0                | N 数量                                     |
-| `gc_content`         | REAL     | NOT NULL, CHECK 0–100                        | GC 百分比（分母为 ACGT）                   |
-| `at_content`         | REAL     | NOT NULL, CHECK 0–100                        | AT 百分比                                  |
-| `complement`         | TEXT     | NOT NULL                                     | 互补链（5'→3'，与输入同向）                |
-| `reverse_complement` | TEXT     | NOT NULL                                     | 反向互补链                                 |
-| `rna`                | TEXT     | NOT NULL                                     | 转录产物（T→U）                            |
-| `source`             | TEXT     | NOT NULL, CHECK IN ('manual','fasta','demo') | 输入来源                                   |
-| `note`               | TEXT     | NULL, len ≤ 500                              | 备注（预留，前端第一阶段不用）             |
-| `created_at`         | TEXT     | NOT NULL, index DESC                         | UTC ISO 8601                               |
+| 字段                 | 类型         | 约束                                   | 说明                                   |
+| -------------------- | ------------ | -------------------------------------- | -------------------------------------- |
+| `id`                 | INTEGER      | PK AUTOINCREMENT                       | 主键                                   |
+| `sequence_name`      | VARCHAR(120) | NOT NULL                               | 记录名，默认 `DNA 分析 · MM-DD HH:MM`  |
+| `sequence_length`    | INTEGER      | NOT NULL                               | 总长度（含 N）                         |
+| `original_sequence`  | TEXT         | NOT NULL                               | 规范化后的序列（大写，仅 ACGTN）       |
+| `sequence_hash`      | VARCHAR(64)  | NOT NULL, index                        | `sha256(sequence)`，用于检索与去重统计 |
+| `a_count`            | INTEGER      | NOT NULL DEFAULT 0                     | A 数量                                 |
+| `t_count`            | INTEGER      | NOT NULL DEFAULT 0                     | T 数量                                 |
+| `g_count`            | INTEGER      | NOT NULL DEFAULT 0                     | G 数量                                 |
+| `c_count`            | INTEGER      | NOT NULL DEFAULT 0                     | C 数量                                 |
+| `n_count`            | INTEGER      | NOT NULL DEFAULT 0                     | N 数量                                 |
+| `gc_content`         | REAL         | NOT NULL                               | GC 百分比，分母为 A+T+G+C              |
+| `at_content`         | REAL         | NOT NULL                               | AT 百分比，分母同上                    |
+| `complement`         | TEXT         | NOT NULL                               | 互补链，按 3′→5′ 方向与输入链反向平行  |
+| `reverse_complement` | TEXT         | NOT NULL                               | 反向互补链，按 5′→3′ 输出              |
+| `rna`                | TEXT         | NOT NULL                               | 同向转录：逐位 T→U                     |
+| `source`             | VARCHAR(16)  | NOT NULL, IN ('manual','fasta','demo') | 输入来源                               |
+| `note`               | TEXT         | NULL                                   | 备注，最长 500 字符                    |
+| `algorithm_version`  | VARCHAR(16)  | NOT NULL DEFAULT '1.0'                 | 算法版本，便于口径变更后回溯           |
+| `created_at`         | DATETIME     | NOT NULL, index                        | UTC 时间                               |
 
-约束补充：
+表级约束：
 
 ```sql
-CHECK (length = a_count + t_count + g_count + c_count + n_count)
+CHECK (a_count + t_count + g_count + c_count + n_count = sequence_length)
+CHECK (source IN ('manual', 'fasta', 'demo'))
 ```
 
-> GC 分母为 0（全 N）时 `gc_content = 0`，由服务层保证，数据库不额外约束。
+索引：`ix_analysis_records_created_at`、`ix_analysis_records_sequence_hash`。
 
-### 3.2 `comparisons` — 序列比对记录
+> 全 N 序列的分母为 0，服务层将 `gc_content` / `at_content` 记为 `0.0`，数据库不做额外约束；前端会注明「N 不计入 GC/AT 分母」。
 
-| 字段                 | 类型    | 约束                  | 说明                      |
-| -------------------- | ------- | --------------------- | ------------------------- |
-| `id`                 | INTEGER | PK AUTOINCREMENT      | 主键                      |
-| `name`               | TEXT    | NOT NULL, len ≤ 120   | 记录名                    |
-| `reference_sequence` | TEXT    | NOT NULL, len ≤ 10000 | 参考序列                  |
-| `query_sequence`     | TEXT    | NOT NULL, len ≤ 10000 | 待比较序列                |
-| `reference_length`   | INTEGER | NOT NULL              | 参考序列长度              |
-| `query_length`       | INTEGER | NOT NULL              | 待比较序列长度            |
-| `alignment_score`    | REAL    | NOT NULL              | PairwiseAligner 得分      |
-| `identity`           | REAL    | NOT NULL, CHECK 0–100 | 一致性百分比              |
-| `substitutions`      | INTEGER | NOT NULL DEFAULT 0    | 替换数                    |
-| `insertions`         | INTEGER | NOT NULL DEFAULT 0    | 插入数（Query 多出）      |
-| `deletions`          | INTEGER | NOT NULL DEFAULT 0    | 缺失数（Query 缺少）      |
-| `difference_count`   | INTEGER | NOT NULL DEFAULT 0    | 差异事件总数              |
-| `difference_ratio`   | REAL    | NOT NULL, CHECK ≥ 0   | 差异列数 ÷ 对齐列数 × 100 |
-| `alignment_json`     | TEXT    | NOT NULL              | 对齐结果 JSON（见 3.4）   |
-| `differences_json`   | TEXT    | NOT NULL              | 差异数组 JSON（见 3.5）   |
-| `created_at`         | TEXT    | NOT NULL, index DESC  | UTC ISO 8601              |
+### 3.2 `comparisons` — 序列比对记录（阶段 6 使用）
+
+字段与阶段 1 设计一致：`name`、`reference_sequence`、`query_sequence`、两条长度、`alignment_score`、`identity`、`substitutions/insertions/deletions`、`difference_count/ratio`、`alignment_json`、`differences_json`、`note`、`created_at`。当前阶段表已建但无写入。
 
 ### 3.3 `meta` — 元数据
 
@@ -114,15 +98,11 @@ CHECK (length = a_count + t_count + g_count + c_count + n_count)
 | `key`   | TEXT | PK       | 键名 |
 | `value` | TEXT | NOT NULL | 值   |
 
-初始数据：
+初始写入 `schema_version=1`、`app_name=GeneAI`、`initialized_at`。
 
-| key              | value               |
-| ---------------- | ------------------- |
-| `schema_version` | `1`                 |
-| `app_name`       | `GeneAI`            |
-| `initialized_at` | 首次建库时间（UTC） |
+### 3.4 JSON 字段结构（阶段 6）
 
-### 3.4 `alignment_json` 结构
+`alignment_json`：
 
 ```json
 {
@@ -134,11 +114,7 @@ CHECK (length = a_count + t_count + g_count + c_count + n_count)
 }
 ```
 
-- `reference`/`query` 为带 `-` 的对齐字符串；`match` 用 `|` 表示相同、`.` 表示替换、空格表示缺口。
-- 序列 > 6,000 列时只存前 6,000 列，`truncated: true`；完整差异列表仍保留全部。
-- 前端按 60 列分块展示，不直接渲染整串。
-
-### 3.5 `differences_json` 结构
+`differences_json`：
 
 ```json
 [
@@ -155,81 +131,50 @@ CHECK (length = a_count + t_count + g_count + c_count + n_count)
     "query_position": 11,
     "inserted": "AA"
   },
-  {
-    "type": "deletion",
-    "ref_position": 6,
-    "query_position": 6,
-    "deleted": "T"
-  }
+  { "type": "deletion", "ref_position": 6, "query_position": 6, "deleted": "T" }
 ]
 ```
 
-- `type` 枚举：`substitution | insertion | deletion`。
-- 位置均为 1-based；插入的 `ref_position` 表示"在该位置之后插入"（0 表示序列开头）。
-- 相邻差异不合并成"复杂变异"，保持一一对应，便于教学解释。
+位置均为 1-based；超过 6,000 列时只保留对齐片段前 6,000 列（`truncated=true`），差异事件仍完整保存。
 
 ---
 
-## 4. 建表 SQL（参考实现）
+## 4. 建表 SQL（与 ORM 等价的参考）
 
 ```sql
 PRAGMA journal_mode = WAL;
-PRAGMA foreign_keys = ON;
-PRAGMA synchronous = NORMAL;
 
-CREATE TABLE IF NOT EXISTS analyses (
+CREATE TABLE analysis_records (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    name               TEXT    NOT NULL,
-    sequence           TEXT    NOT NULL,
-    sequence_hash      TEXT    NOT NULL,
-    length             INTEGER NOT NULL CHECK (length > 0),
-    a_count            INTEGER NOT NULL DEFAULT 0 CHECK (a_count >= 0),
-    t_count            INTEGER NOT NULL DEFAULT 0 CHECK (t_count >= 0),
-    g_count            INTEGER NOT NULL DEFAULT 0 CHECK (g_count >= 0),
-    c_count            INTEGER NOT NULL DEFAULT 0 CHECK (c_count >= 0),
-    n_count            INTEGER NOT NULL DEFAULT 0 CHECK (n_count >= 0),
-    gc_content         REAL    NOT NULL CHECK (gc_content >= 0 AND gc_content <= 100),
-    at_content         REAL    NOT NULL CHECK (at_content >= 0 AND at_content <= 100),
-    complement         TEXT    NOT NULL,
-    reverse_complement TEXT    NOT NULL,
-    rna                TEXT    NOT NULL,
-    source             TEXT    NOT NULL CHECK (source IN ('manual', 'fasta', 'demo')),
+    sequence_name      VARCHAR(120) NOT NULL,
+    sequence_length    INTEGER NOT NULL,
+    original_sequence  TEXT NOT NULL,
+    sequence_hash      VARCHAR(64) NOT NULL,
+    a_count            INTEGER NOT NULL DEFAULT 0,
+    t_count            INTEGER NOT NULL DEFAULT 0,
+    g_count            INTEGER NOT NULL DEFAULT 0,
+    c_count            INTEGER NOT NULL DEFAULT 0,
+    n_count            INTEGER NOT NULL DEFAULT 0,
+    gc_content         REAL NOT NULL,
+    at_content         REAL NOT NULL,
+    complement         TEXT NOT NULL,
+    reverse_complement TEXT NOT NULL,
+    rna                TEXT NOT NULL,
+    source             VARCHAR(16) NOT NULL DEFAULT 'manual',
     note               TEXT,
-    created_at         TEXT    NOT NULL,
-    CHECK (length = a_count + t_count + g_count + c_count + n_count)
+    algorithm_version  VARCHAR(16) NOT NULL DEFAULT '1.0',
+    created_at         DATETIME NOT NULL,
+    CONSTRAINT ck_analysis_records_counts_sum
+        CHECK (a_count + t_count + g_count + c_count + n_count = sequence_length),
+    CONSTRAINT ck_analysis_records_source
+        CHECK (source IN ('manual', 'fasta', 'demo'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_analyses_created_at ON analyses (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_analyses_hash       ON analyses (sequence_hash);
-
-CREATE TABLE IF NOT EXISTS comparisons (
-    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    name               TEXT    NOT NULL,
-    reference_sequence TEXT    NOT NULL,
-    query_sequence     TEXT    NOT NULL,
-    reference_length   INTEGER NOT NULL,
-    query_length       INTEGER NOT NULL,
-    alignment_score    REAL    NOT NULL,
-    identity           REAL    NOT NULL CHECK (identity >= 0 AND identity <= 100),
-    substitutions      INTEGER NOT NULL DEFAULT 0,
-    insertions         INTEGER NOT NULL DEFAULT 0,
-    deletions          INTEGER NOT NULL DEFAULT 0,
-    difference_count   INTEGER NOT NULL DEFAULT 0,
-    difference_ratio   REAL    NOT NULL DEFAULT 0,
-    alignment_json     TEXT    NOT NULL,
-    differences_json   TEXT    NOT NULL,
-    created_at         TEXT    NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_comparisons_created_at ON comparisons (created_at DESC);
-
-CREATE TABLE IF NOT EXISTS meta (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-);
+CREATE INDEX ix_analysis_records_created_at ON analysis_records (created_at);
+CREATE INDEX ix_analysis_records_sequence_hash ON analysis_records (sequence_hash);
 ```
 
-SQLAlchemy 模型对应 `Base.metadata.create_all(engine)`，SQL 仅作文档与手工排查参考。
+`comparisons` 与 `meta` 由 `Base.metadata.create_all()` 创建，字段见 `server/app/models.py`。
 
 ---
 
@@ -238,105 +183,67 @@ SQLAlchemy 模型对应 `Base.metadata.create_all(engine)`，SQL 仅作文档与
 ### 5.1 Dashboard 总览
 
 ```sql
--- 计数
-SELECT
-  (SELECT COUNT(*) FROM analyses)    AS analysis_count,
-  (SELECT COUNT(*) FROM comparisons) AS comparison_count;
-
--- 平均 GC 与最近时间
-SELECT AVG(gc_content), MAX(created_at) FROM analyses;
-
--- 碱基累计
+SELECT COUNT(*) FROM analysis_records;
+SELECT COUNT(*) FROM comparisons;
+SELECT AVG(gc_content), MAX(created_at) FROM analysis_records;
 SELECT SUM(a_count), SUM(t_count), SUM(g_count), SUM(c_count), SUM(n_count)
-FROM analyses;
+FROM analysis_records;
 ```
 
-### 5.2 GC 趋势（最近 14 天）
+### 5.2 GC 趋势（最近 20 条，按时间升序返回）
 
 ```sql
-SELECT substr(created_at, 1, 10) AS day,
-       AVG(gc_content)           AS avg_gc,
-       COUNT(*)                  AS count
-FROM analyses
-WHERE created_at >= :since
-GROUP BY day
-ORDER BY day;
+SELECT id, sequence_name, gc_content, created_at
+FROM analysis_records
+ORDER BY created_at DESC, id DESC
+LIMIT 20;
 ```
 
-> 缺失日期由服务层补 `null`，前端折线断开，不用 0 填充。
+> 服务层把结果反转后再返回；前端按记录时间绘制折线，不做按日聚合。
 
-### 5.3 历史搜索
+### 5.3 历史搜索与分页
 
 ```sql
-SELECT id, name, length, gc_content, created_at
-FROM analyses
-WHERE (:q IS NULL OR name LIKE :like OR sequence LIKE :like)
-  AND (:from IS NULL OR created_at >= :from)
-ORDER BY created_at DESC
+SELECT *
+FROM analysis_records
+WHERE (:q IS NULL OR sequence_name LIKE :like OR note LIKE :like)
+ORDER BY created_at DESC, id DESC
 LIMIT :limit OFFSET :offset;
 ```
 
-- `LIKE` 通配符由服务层转义（`%`、`_`）。
-- 序列全文搜索在大数据量下会慢；课程规模（<10k 条）可接受。后续可加 FTS5。
+`LIKE` 通配符由服务层转义；课程规模（<10k 条）无需 FTS5。
 
-### 5.4 合并最近记录
+### 5.4 滑动窗口 GC
 
-```sql
-SELECT id, 'analysis' AS kind, name, length, gc_content, created_at FROM analyses
-UNION ALL
-SELECT id, 'comparison' AS kind, name, reference_length AS length, identity AS gc_content, created_at FROM comparisons
-ORDER BY created_at DESC
-LIMIT 5;
-```
-
-> 比对记录的 `gc_content` 列在此仅占位为 `identity`，前端按 `kind` 渲染不同标签，不混淆语义。
+由 `GET /history/{id}/gc-windows` 调用服务层 `gc_windows(sequence, window, step)` 逐窗口计算，不落库；仅完整窗口参与，末尾不足一个窗口的碱基忽略。
 
 ---
 
 ## 6. 数据生命周期
 
-| 事件                   | 行为                                                                  |
-| ---------------------- | --------------------------------------------------------------------- |
-| 分析成功且 `save=true` | 插入一条 `analyses`                                                   |
-| 分析 `save=false`      | 不写库，仅在响应中返回结果（`id = null`）                             |
-| 比对成功               | 插入一条 `comparisons`                                                |
-| 删除                   | 物理删除，不级联（无外键）                                            |
-| 清空                   | 不提供"清空全部"按钮，避免误操作                                      |
-| 备份                   | 复制 `geneai.db`（WAL 模式下同时复制 `-wal`、`-shm` 或先 checkpoint） |
+| 事件                 | 行为                                                               |
+| -------------------- | ------------------------------------------------------------------ |
+| `POST /history`      | 校验后插入一条 `analysis_records`，返回完整记录                    |
+| `POST /analyze`      | 只计算、不写库（预览用）                                           |
+| `POST /upload/fasta` | 只解析、返回序列与预览结果，不写库                                 |
+| 删除                 | `DELETE /history/{id}` 物理删除，无级联                            |
+| 清空                 | 不提供「清空全部」按钮；删除 `server/geneai.db` 即重置             |
+| 备份                 | 复制 `geneai.db`；WAL 模式需同时复制 `-wal`/`-shm` 或先 checkpoint |
 
-容量估算：单条 1,000bp 分析记录约 4–5KB（含三条链）；10,000 条约 50MB，SQLite 完全可承受。
-
----
-
-## 7. 迁移策略
-
-1. `meta.schema_version` 当前为 `1`。
-2. 启动时 `init_db()`：
-   - `create_all` 补齐缺失表；
-   - 读取 `schema_version`；
-   - 若小于代码版本，按顺序执行 `MIGRATIONS` 列表中的 `ALTER TABLE` / `UPDATE`；
-   - 更新版本号。
-3. 课程项目只做**增量加列**，不做破坏性变更；需要改结构时提供 `server/scripts/reset_db.py` 并由 README 说明会丢失数据。
-4. 不引入 Alembic（超出课程范围），但迁移函数需可测试。
+容量估算：1,000 bp 记录约 4–5 KB（含三条链），10,000 条约 50 MB。
 
 ---
 
-## 8. 一致性约束（服务层职责）
+## 7. 迁移与初始化
 
-数据库只能保证格式，以下由服务层保证：
+- 启动时 `init_db()`：
+  1. 若存在旧表 `analyses` 且不存在 `analysis_records`，在事务内 `ALTER TABLE analyses RENAME TO analysis_records`，并把 `name→sequence_name`、`length→sequence_length`、`sequence→original_sequence`（SQLite ≥ 3.25 的 `RENAME COLUMN`）。
+  2. `Base.metadata.create_all()` 补建缺失表。
+  3. `_ensure_analysis_columns()` 为旧库补 `algorithm_version` 与两个索引。
+- 不引入 Alembic；课程项目只做增量变更，破坏性调整通过删除 `geneai.db` 重建。
+- `meta.schema_version` 当前为 `1`。
 
-- `sequence` 已规范化（无空白、全大写、仅 ACGTN）。
-- `length` 等于序列实际长度。
-- 五个计数之和等于 `length`。
-- `complement` / `reverse_complement` / `rna` 长度均等于 `length`。
-- `gc_content + at_content ≤ 100`（存在 N 时小于 100）。
-- `difference_count = substitutions + insertions + deletions`。
-- `identity` 与 `difference_ratio` 在 0–100 之间（比例可能因插入事件多于列数超过 100，存库时截断为 100 并在 `alignment_json` 中保留原始事件数）。
-- 所有时间写入 UTC，展示时转本地时区。
-
----
-
-## 9. 初始化方式
+初始化命令：
 
 ```bash
 cd server
@@ -344,29 +251,31 @@ python -m venv .venv
 .venv/Scripts/activate
 pip install -r requirements.txt
 python -c "from app.db import init_db; init_db()"
-# 或直接启动，应用启动钩子自动建表
 uvicorn app.main:app --reload --port 8000
 ```
 
-首次启动后应存在：
-
-```
-server/geneai.db
-server/geneai.db-wal
-server/geneai.db-shm
-```
-
-`.gitignore` 需忽略 `server/geneai.db*` 与 `server/.venv/`。
+首次启动生成 `server/geneai.db`（WAL 模式另有 `-wal`/`-shm`）。`.gitignore` 已忽略 `server/geneai.db`、`server/.venv/`。
 
 ---
 
-## 10. 安全与隐私
+## 8. 服务层一致性职责
 
-- 所有 SQL 通过 SQLAlchemy 参数绑定，禁止 f-string 拼 SQL。
-- 序列内容只在本机数据库，不上传第三方。
+- `original_sequence` 已规范化：全大写、无空白、仅 A/T/G/C/N。
+- `sequence_length` 等于实际长度，五项计数之和相等（数据库 CHECK 兜底）。
+- 三条链长度均等于 `sequence_length`；N 在互补链中保持 N。
+- `gc_content + at_content ≤ 100`，仅在存在 N 时小于 100。
+- 所有时间以 UTC 写入；接口统一输出 `Z`。
+- `difference_count = substitutions + insertions + deletions`（阶段 6）。
+
+---
+
+## 9. 安全与隐私
+
+- 所有 SQL 走 SQLAlchemy 参数绑定，禁止拼接 SQL。
+- 序列仅保存在本机 SQLite，不上传第三方；请求日志不打印序列内容。
 - 删除为物理删除；课程演示数据不含个人信息。
 - 数据库文件权限依赖操作系统账户，不做额外加密。
 
 ---
 
-_实现阶段如字段调整，必须同步 `API_DESIGN.md` 的响应结构与 `src/types/api.ts`。_
+_字段调整时同步 `API_DESIGN.md`、`src/types/api.ts` 与 `server/app/schemas.py`。_

@@ -39,6 +39,7 @@ dist-ssr
 # Python backend
 server/.venv/
 server/geneai.db
+server/geneai.db-*
 __pycache__/
 *.pyc
 server/.pytest_cache/

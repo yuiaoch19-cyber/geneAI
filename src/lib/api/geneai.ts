@@ -10,9 +10,9 @@ import { api } from './client'
 
 interface RawAnalysis {
   id: number
-  name: string
-  sequence: string
-  length: number
+  sequence_name: string
+  sequence_length: number
+  original_sequence: string
   a_count: number
   t_count: number
   g_count: number
@@ -25,6 +25,7 @@ interface RawAnalysis {
   rna: string
   source: AnalysisSource
   note: string | null
+  algorithm_version: string
   created_at: string
 }
 
@@ -55,9 +56,9 @@ interface RawStats {
 function toRecord(raw: RawAnalysis): AnalysisRecord {
   return {
     id: raw.id,
-    name: raw.name,
-    sequence: raw.sequence,
-    length: raw.length,
+    name: raw.sequence_name,
+    sequence: raw.original_sequence,
+    length: raw.sequence_length,
     counts: {
       a: raw.a_count,
       t: raw.t_count,
@@ -84,9 +85,9 @@ export interface CreateAnalysisInput {
 }
 
 export async function createAnalysis(input: CreateAnalysisInput): Promise<AnalysisRecord> {
-  const raw = await api.post<RawAnalysis>('/analyses', {
-    name: input.name,
-    sequence: input.sequence,
+  const raw = await api.post<RawAnalysis>('/history', {
+    sequence_name: input.name,
+    original_sequence: input.sequence,
     source: input.source ?? 'manual',
     note: input.note,
   })
@@ -103,7 +104,7 @@ export async function listAnalyses(params: {
   search.set('page', String(params.page ?? 1))
   search.set('page_size', String(params.pageSize ?? 10))
 
-  const raw = await api.get<RawPage>(`/analyses?${search.toString()}`)
+  const raw = await api.get<RawPage>(`/history?${search.toString()}`)
   return {
     items: raw.items.map(toRecord),
     total: raw.total,
@@ -114,11 +115,11 @@ export async function listAnalyses(params: {
 }
 
 export async function getAnalysis(id: number): Promise<AnalysisRecord> {
-  return toRecord(await api.get<RawAnalysis>(`/analyses/${id}`))
+  return toRecord(await api.get<RawAnalysis>(`/history/${id}`))
 }
 
 export async function deleteAnalysis(id: number): Promise<void> {
-  await api.delete(`/analyses/${id}`)
+  await api.delete(`/history/${id}`)
 }
 
 export async function getStatsOverview(): Promise<StatsOverview> {
@@ -151,6 +152,6 @@ export async function getGcWindows(
   step = 10
 ): Promise<GcWindows> {
   return api.get<GcWindows>(
-    `/analyses/${id}/gc-windows?window=${window}&step=${step}`
+    `/history/${id}/gc-windows?window=${window}&step=${step}`
   )
 }
