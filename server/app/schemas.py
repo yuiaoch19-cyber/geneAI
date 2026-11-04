@@ -114,3 +114,56 @@ class GcWindowsOut(BaseModel):
     window: int
     step: int
     points: list[GcWindowPoint]
+
+
+class CompareRequest(BaseModel):
+    reference: str = Field(min_length=1, description="参考序列")
+    query: str = Field(min_length=1, description="待比较序列")
+    reference_name: str | None = Field(default=None, max_length=120)
+    query_name: str | None = Field(default=None, max_length=120)
+
+
+class DifferenceOut(BaseModel):
+    type: Literal["substitution", "insertion", "deletion"]
+    ref_position: int
+    query_position: int
+    ref_base: str | None
+    query_base: str | None
+
+
+class ComparisonResult(BaseModel):
+    reference_name: str
+    query_name: str
+    reference_sequence: str
+    query_sequence: str
+    reference_length: int
+    query_length: int
+    alignment_length: int
+    aligned_reference: str
+    aligned_query: str
+    score: float
+    identity: float
+    substitutions: int
+    insertions: int
+    deletions: int
+    difference_count: int
+    difference_ratio: float
+    differences: list[DifferenceOut]
+    algorithm: str
+    scoring: dict[str, float | str]
+    tie_break: str
+    coordinate_rule: str
+
+
+class ComparisonRecord(ComparisonResult):
+    id: int
+    name: str
+    created_at: str
+
+
+class ComparisonPage(BaseModel):
+    items: list[ComparisonRecord]
+    total: int
+    page: int
+    page_size: int
+    pages: int

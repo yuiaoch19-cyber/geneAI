@@ -17,7 +17,7 @@ export const DEMO_ANALYSIS = {
 
 export const DEMO_COMPARISON = {
   label: 'HBB 片段 vs 突变版本',
-  description: '由同一片段构造：1 处替换 + 1 处插入（演示数据）',
+  description: '由同一片段构造：第 21 位替换 + 第 50 位后插入 1 个 T（演示数据）',
   reference: HBB_FRAGMENT,
-  query: `${HBB_FRAGMENT.slice(0, 20)}G${HBB_FRAGMENT.slice(21, 50)}TT${HBB_FRAGMENT.slice(50)}`,
+  query: `${HBB_FRAGMENT.slice(0, 20)}A${HBB_FRAGMENT.slice(21, 50)}T${HBB_FRAGMENT.slice(50)}`,
 }

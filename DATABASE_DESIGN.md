@@ -87,9 +87,11 @@ CHECK (source IN ('manual', 'fasta', 'demo'))
 
 > 全 N 序列的分母为 0，服务层将 `gc_content` / `at_content` 记为 `0.0`，数据库不做额外约束；前端会注明「N 不计入 GC/AT 分母」。
 
-### 3.2 `comparisons` — 序列比对记录（阶段 6 使用）
+### 3.2 `comparisons` — 序列比对记录（阶段 6 已启用）
 
-字段与阶段 1 设计一致：`name`、`reference_sequence`、`query_sequence`、两条长度、`alignment_score`、`identity`、`substitutions/insertions/deletions`、`difference_count/ratio`、`alignment_json`、`differences_json`、`note`、`created_at`。当前阶段表已建但无写入。
+字段：`name`、`reference_sequence`、`query_sequence`、`reference_length`、`query_length`、`alignment_score`、`identity`、`substitutions/insertions/deletions`、`difference_count/ratio`、`alignment_json`、`differences_json`、`note`、`created_at`。
+
+每次 `POST /api/comparisons` 写入一行；`alignment_json` 保存对齐串与算法元信息，`differences_json` 保存逐碱基差异。列表查询不解析大字段，详情才返回对齐与差异数组。
 
 ### 3.3 `meta` — 元数据
 
@@ -100,38 +102,48 @@ CHECK (source IN ('manual', 'fasta', 'demo'))
 
 初始写入 `schema_version=1`、`app_name=GeneAI`、`initialized_at`。
 
-### 3.4 JSON 字段结构（阶段 6）
+### 3.4 JSON 字段结构
 
 `alignment_json`：
 
 ```json
 {
-  "reference": "ATGCGTACGT",
-  "match": "|||||| |||",
-  "query": "ATGCGTTCGT",
-  "columns": 10,
-  "truncated": false
+  "reference_name": "参考序列",
+  "query_name": "待比较序列",
+  "alignment_length": 10,
+  "aligned_reference": "ATGG-CCTAA",
+  "aligned_query": "ATGGACCTAA",
+  "algorithm": "Biopython PairwiseAligner (global, Needleman-Wunsch)",
+  "scoring": {
+    "mode": "global",
+    "match_score": 2,
+    "mismatch_score": -1,
+    "open_gap_score": -10,
+    "extend_gap_score": -0.5
+  },
+  "tie_break": "取 PairwiseAligner 返回的第一条最优比对（同分时由回溯顺序决定）",
+  "coordinate_rule": "参考坐标 1-based；替换/缺失指向参考碱基位置，插入指向插入点前一个参考碱基（0 表示序列开头）。"
 }
 ```
 
-`differences_json`：
+`differences_json`（逐碱基事件，`ref_position` 为 1-based 参考坐标）：
 
 ```json
 [
   {
     "type": "substitution",
-    "ref_position": 7,
-    "query_position": 7,
-    "reference_base": "A",
-    "query_base": "T"
+    "ref_position": 21,
+    "query_position": 21,
+    "ref_base": "G",
+    "query_base": "A"
   },
   {
     "type": "insertion",
-    "ref_position": 10,
-    "query_position": 11,
-    "inserted": "AA"
-  },
-  { "type": "deletion", "ref_position": 6, "query_position": 6, "deleted": "T" }
+    "ref_position": 50,
+    "query_position": 51,
+    "ref_base": null,
+    "query_base": "T"
+  }
 ]
 ```
 

@@ -4,7 +4,7 @@
 | ---- | --------------------------------------------------------------- |
 | 风格 | REST + JSON                                                     |
 | 基址 | `http://127.0.0.1:8000/api`（开发期由 Vite 代理 `/api`）        |
-| 版本 | `0.5.0`（阶段 5 已实现；比对接口在阶段 6 落地）                 |
+| 版本 | `0.6.0`（阶段 6：分析 / FASTA / 历史 / 比对均已实现）           |
 | 编码 | UTF-8；JSON 为 `application/json`，上传为 `multipart/form-data` |
 | 时间 | UTC ISO 8601，输出以 `Z` 结尾，如 `2026-11-05T00:09:00Z`        |
 | 分页 | `page`（1-based）+ `page_size`（1–100），响应带 `total/pages`   |
@@ -100,21 +100,26 @@ allow_headers = ["*"]
 
 ---
 
-## 2. 接口总览（阶段 5 已实现）
+## 2. 接口总览（阶段 6 已实现）
 
-| 方法   | 路径                           | 说明                    |
-| ------ | ------------------------------ | ----------------------- |
-| GET    | `/api/health`                  | 健康检查与数据库连通性  |
-| POST   | `/api/analyze`                 | 分析 DNA 序列（不写库） |
-| POST   | `/api/upload/fasta`            | 上传并解析单条 FASTA    |
-| POST   | `/api/history`                 | 分析并保存一条历史记录  |
-| GET    | `/api/history`                 | 历史列表（搜索 + 分页） |
-| GET    | `/api/history/{id}`            | 历史详情                |
-| DELETE | `/api/history/{id}`            | 删除历史记录            |
-| GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据        |
-| GET    | `/api/stats/overview`          | Dashboard 聚合统计      |
+| 方法   | 路径                           | 说明                     |
+| ------ | ------------------------------ | ------------------------ |
+| GET    | `/api/health`                  | 健康检查与数据库连通性   |
+| POST   | `/api/analyze`                 | 分析 DNA 序列（不写库）  |
+| POST   | `/api/upload/fasta`            | 上传并解析单条 FASTA     |
+| POST   | `/api/history`                 | 分析并保存一条历史记录   |
+| GET    | `/api/history`                 | 历史列表（搜索 + 分页）  |
+| GET    | `/api/history/{id}`            | 历史详情                 |
+| DELETE | `/api/history/{id}`            | 删除历史记录             |
+| GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据         |
+| GET    | `/api/stats/overview`          | Dashboard 聚合统计       |
+| POST   | `/api/compare`                 | 双序列全局比对（不写库） |
+| POST   | `/api/comparisons`             | 比对并保存一条记录       |
+| GET    | `/api/comparisons`             | 比对列表（搜索 + 分页）  |
+| GET    | `/api/comparisons/{id}`        | 比对详情（含对齐与差异） |
+| DELETE | `/api/comparisons/{id}`        | 删除比对记录             |
 
-阶段 6 规划：`POST /api/comparisons`、`GET /api/comparisons`、`GET/DELETE /api/comparisons/{id}`、`GET /api/history/{id}/report`。
+规划中：`GET /api/history/{id}/report`（PDF 报告，阶段 7）。
 
 ---
 
@@ -368,13 +373,99 @@ FASTA 头取 `record.id` 的首个空白词，截断到 120 字符；无头时�
 
 ---
 
-## 7. 序列比对（阶段 6 规划）
+## 7. 序列比对（阶段 6 已实现）
 
-- `POST /api/comparisons`：Biopython `PairwiseAligner`，`mode='global'`、`match_score=2`、`mismatch_score=-1`、`open_gap_score=-10`、`extend_gap_score=-0.5`。
-- 差异提取：等长块逐位比较为替换；参考空/Query 非空为插入；Query 空/参考非空为缺失。
-- `identity = 相同列数 / 对齐列数 × 100`；`difference_ratio = 差异事件数 / 对齐列数 × 100`。
-- 长度上限 10,000 bp/条，超出 `ALIGNMENT_TOO_LONG`。
-- 详情返回 `alignment` 与 `differences`，列表不返回以控制体积。
+### `POST /api/compare`
+
+只比对、不写库，用于页面即时预览。
+
+请求：
+
+```json
+{
+  "reference": "ATGGCCTAA",
+  "query": "ATGGACCTAA",
+  "reference_name": "参考序列",
+  "query_name": "待比较序列"
+}
+```
+
+响应 `200`（节选）：
+
+```json
+{
+  "reference_sequence": "ATGGCCTAA",
+  "query_sequence": "ATGGACCTAA",
+  "reference_length": 9,
+  "query_length": 10,
+  "alignment_length": 10,
+  "aligned_reference": "ATGG-CCTAA",
+  "aligned_query": "ATGGACCTAA",
+  "score": 8,
+  "identity": 90.0,
+  "substitutions": 0,
+  "insertions": 1,
+  "deletions": 0,
+  "difference_count": 1,
+  "difference_ratio": 10.0,
+  "differences": [
+    {
+      "type": "insertion",
+      "ref_position": 4,
+      "query_position": 5,
+      "ref_base": null,
+      "query_base": "A"
+    }
+  ],
+  "algorithm": "Biopython PairwiseAligner (global, Needleman-Wunsch)",
+  "scoring": {
+    "mode": "global",
+    "match_score": 2,
+    "mismatch_score": -1,
+    "open_gap_score": -10,
+    "extend_gap_score": -0.5
+  },
+  "tie_break": "取 PairwiseAligner 返回的第一条最优比对（同分时由回溯顺序决定）",
+  "coordinate_rule": "参考坐标 1-based；替换/缺失指向参考碱基位置，插入指向插入点前一个参考碱基（0 表示序列开头）。"
+}
+```
+
+算法与口径：
+
+- Biopython `PairwiseAligner`，`mode='global'`（Needleman–Wunsch），`match=2`、`mismatch=-1`、`open_gap=-10`、`extend_gap=-0.5`。
+- 差异按对齐列提取：两列均为碱基且不同 → 替换；参考为 `-` → 插入；查询为 `-` → 缺失。
+- 计数按碱基事件计（连续插入 2 个碱基记为 2 处插入），不是按连续片段计。
+- `identity = 相同列数 / alignment_length × 100`；`difference_ratio = difference_count / alignment_length × 100`。
+- 同分策略固定为「取第一条最优比对」，并在响应与页面中明示。
+- 每条序列上限 `MAX_ALIGNMENT_LENGTH=5000 bp`，超出返回 `413 ALIGNMENT_TOO_LONG`。
+- 差异是算法对齐推断，不等同于真实生物学突变；接口与页面均不输出疾病/临床结论。
+
+### `POST /api/comparisons`
+
+请求体同 `/api/compare`，另可传 `reference_name`、`query_name`。成功返回 `201`，响应在 `/api/compare` 基础上增加：
+
+```json
+{
+  "id": 1,
+  "name": "参考序列 vs 待比较序列",
+  "created_at": "2026-11-05T00:18:00Z"
+}
+```
+
+- 保存对齐串、评分、算法版本与差异 JSON；`name` 缺省为「参考名 vs 查询名」。
+- 保存后计入 `/api/stats/overview`：比对记录 +1，序列数 +2。
+
+### `GET /api/comparisons`
+
+查询参数：`q`（匹配 `name`）、`page`、`page_size`。列表项包含计数与标量指标，**不返回** `aligned_*` 与 `differences` 以控制体积。
+
+### `GET /api/comparisons/{id}`
+
+返回完整比对结果（含 `aligned_reference`、`aligned_query`、`differences`）。
+
+### `DELETE /api/comparisons/{id}`
+
+成功 `204`；不存在 `404 NOT_FOUND`。
 
 ---
 
@@ -389,6 +480,10 @@ FASTA 头取 `record.id` 的首个空白词，截断到 120 字符；无头时�
 | 记录详情  | `getAnalysis`                   | `GET /history/{id}`            |
 | 删除      | `deleteAnalysis`                | `DELETE /history/{id}`         |
 | 滑窗 GC   | `getGcWindows`                  | `GET /history/{id}/gc-windows` |
+| 比对预览  | `compareSequences`              | `POST /compare`                |
+| 保存比对  | `saveComparison`                | `POST /comparisons`            |
+| 比对列表  | `listComparisons`               | `GET /comparisons`             |
+| 删除比对  | `deleteComparison`              | `DELETE /comparisons/{id}`     |
 | 健康检查  | `fetch('/api/health')`          | `GET /health`                  |
 
 Query keys：`['stats','overview']`、`['analysis', id]`。写操作成功后 invalidate `['stats','overview']`。

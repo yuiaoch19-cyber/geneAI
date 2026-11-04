@@ -17,12 +17,14 @@ DATABASE_PATH = Path(os.getenv("GENEAI_DB_PATH", BASE_DIR / "geneai.db"))
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_PATH.as_posix()}")
 
 APP_NAME = "GeneAI"
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.6.0"
 # 序列算法口径版本：写入数据库，便于后续统计口径升级时区分历史记录。
 ALGORITHM_VERSION = "1.0"
 
 MAX_SEQUENCE_LENGTH = int(os.getenv("MAX_SEQUENCE_LENGTH", "100000"))
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(2 * 1024 * 1024)))
+# 双序列全局比对为 O(n·m)，本地课程项目把每条序列限制在 5,000 bp。
+MAX_ALIGNMENT_LENGTH = int(os.getenv("MAX_ALIGNMENT_LENGTH", "5000"))
 
 DEFAULT_PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100

@@ -12,8 +12,8 @@
 | -------------- | --------- | ---------------------------------------------------------------------------- |
 | Dashboard 总览 | ✅        | 真实统计、碱基环形/柱状图、GC 趋势、最近记录与详情、快捷操作                 |
 | DNA 序列分析   | ✅        | 手动/FASTA 输入、严格校验、A/T/G/C/N 统计、GC/AT、三条转换链、复制、保存历史 |
-| 序列差异比较   | 🚧 阶段 6 | 页面骨架与输入校验已完成，比对引擎待接入                                     |
-| 数据可视化     | 🚧 阶段 6 | 页面骨架与口径说明已完成，ECharts 待接数据                                   |
+| 序列差异比较   | ✅        | Biopython 全局比对、替换/插入/缺失与参考坐标、对齐高亮、图例、保存比对记录   |
+| 数据可视化     | 🚧 阶段 7 | 页面骨架与口径说明已完成，ECharts 待接历史数据                               |
 | 历史记录与报告 | 🚧 阶段 7 | 后端 CRUD 已就绪，列表页与 PDF 待完成                                        |
 | 系统设置       | ✅        | 外观/主题、本地工作区信息（中文）                                            |
 
@@ -36,8 +36,8 @@
 │  └─ styles/           theme.css 设计令牌
 ├─ server/              后端
 │  ├─ app/
-│  │  ├─ routers/       analyze / history / stats
-│  │  ├─ services/      dna.py、fasta.py
+│  │  ├─ routers/       analyze / history / comparisons / stats
+│  │  ├─ services/      dna.py、fasta.py、alignment.py
 │  │  ├─ models.py      AnalysisRecord / Comparison / Meta
 │  │  ├─ schemas.py     请求与响应模型
 │  │  └─ main.py        FastAPI 入口
@@ -93,19 +93,20 @@ cd server
 
 后端读取 `server/.env`（不会覆盖真实环境变量），见 `server/.env.example`：
 
-| 变量                  | 默认                    | 说明                   |
-| --------------------- | ----------------------- | ---------------------- |
-| `GENEAI_DB_PATH`      | `server/geneai.db`      | SQLite 文件            |
-| `DATABASE_URL`        | `sqlite:///…/geneai.db` | 完整连接串，优先级更高 |
-| `MAX_SEQUENCE_LENGTH` | `100000`                | 单条序列上限           |
-| `MAX_UPLOAD_BYTES`    | `2097152`               | FASTA 上传上限         |
-| `CORS_ORIGIN_REGEX`   | localhost 任意端口      | 开发期跨域             |
+| 变量                   | 默认                    | 说明                   |
+| ---------------------- | ----------------------- | ---------------------- |
+| `GENEAI_DB_PATH`       | `server/geneai.db`      | SQLite 文件            |
+| `DATABASE_URL`         | `sqlite:///…/geneai.db` | 完整连接串，优先级更高 |
+| `MAX_SEQUENCE_LENGTH`  | `100000`                | 单条序列上限           |
+| `MAX_UPLOAD_BYTES`     | `2097152`               | FASTA 上传上限         |
+| `MAX_ALIGNMENT_LENGTH` | `5000`                  | 单条比对序列上限       |
+| `CORS_ORIGIN_REGEX`    | localhost 任意端口      | 开发期跨域             |
 
 前端可选 `VITE_API_BASE_URL`，默认同源 `/api`。
 
 ## API
 
-阶段 5 已实现：
+阶段 6 已实现：
 
 ```
 GET    /api/health
@@ -117,6 +118,11 @@ GET    /api/history/{id}
 DELETE /api/history/{id}
 GET    /api/history/{id}/gc-windows
 GET    /api/stats/overview
+POST   /api/compare
+POST   /api/comparisons
+GET    /api/comparisons?q=&page=&page_size=
+GET    /api/comparisons/{id}
+DELETE /api/comparisons/{id}
 ```
 
 错误统一为 `{ detail, code, field? }`。详见 [API_DESIGN.md](API_DESIGN.md)。

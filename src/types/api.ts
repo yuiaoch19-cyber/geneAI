@@ -68,3 +68,59 @@ export interface GcWindows {
   step: number
   points: GcWindowPoint[]
 }
+
+export type DifferenceType = 'substitution' | 'insertion' | 'deletion'
+
+export interface SequenceDifference {
+  type: DifferenceType
+  refPosition: number
+  queryPosition: number
+  refBase: string | null
+  queryBase: string | null
+}
+
+export interface ComparisonScoring {
+  mode: string
+  match_score: number
+  mismatch_score: number
+  open_gap_score: number
+  extend_gap_score: number
+}
+
+export interface ComparisonResult {
+  referenceName: string
+  queryName: string
+  referenceSequence: string
+  querySequence: string
+  referenceLength: number
+  queryLength: number
+  alignmentLength: number
+  alignedReference: string
+  alignedQuery: string
+  score: number
+  identity: number
+  substitutions: number
+  insertions: number
+  deletions: number
+  differenceCount: number
+  differenceRatio: number
+  differences: SequenceDifference[]
+  algorithm: string
+  scoring: ComparisonScoring
+  tieBreak: string
+  coordinateRule: string
+}
+
+export interface ComparisonRecord extends ComparisonResult {
+  id: number
+  name: string
+  createdAt: string
+}
+
+export interface ComparisonPage {
+  items: ComparisonRecord[]
+  total: number
+  page: number
+  pageSize: number
+  pages: number
+}
