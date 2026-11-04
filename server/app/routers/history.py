@@ -1,6 +1,7 @@
-"""历史记录接口：保存、查询、详情、删除。"""
+"""历史记录接口：保存、查询、详情、删除、PDF 报告。"""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import func, or_, select
@@ -17,6 +18,8 @@ from ..schemas import (
     HistoryRecord,
 )
 from ..services import dna
+from ..services.dates import local_day_start_utc
+from ..services.report import build_analysis_report
 
 router = APIRouter(prefix="/history", tags=["history"])
 
@@ -87,6 +90,8 @@ def list_history(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     include_sequence: bool = Query(default=True),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> HistoryPage:
     statement = select(AnalysisRecord)
@@ -97,6 +102,15 @@ def list_history(
                 AnalysisRecord.sequence_name.like(pattern),
                 AnalysisRecord.note.like(pattern),
             )
+        )
+    if date_from:
+        statement = statement.where(
+            AnalysisRecord.created_at >= local_day_start_utc(date_from)
+        )
+    if date_to:
+        statement = statement.where(
+            AnalysisRecord.created_at
+            < local_day_start_utc(date_to + timedelta(days=1))
         )
 
     total = db.scalar(select(func.count()).select_from(statement.subquery())) or 0
@@ -134,6 +148,24 @@ def _get_or_404(record_id: int, db: Session) -> AnalysisRecord:
 @router.get("/{record_id}", response_model=HistoryRecord)
 def get_history(record_id: int, db: Session = Depends(get_db)) -> HistoryRecord:
     return to_record(_get_or_404(record_id, db))
+
+
+@router.get("/{record_id}/report")
+def download_report(record_id: int, db: Session = Depends(get_db)) -> Response:
+    record = _get_or_404(record_id, db)
+    pdf = build_analysis_report(record)
+    if not pdf.startswith(b"%PDF") or len(pdf) < 2000:
+        raise ApiError(500, "REPORT_FAILED", "报告生成失败，请稍后重试。")
+
+    ascii_name = f"GeneAI-report-{record.id}.pdf"
+    utf8_name = quote(f"GeneAI-分析报告-{record.id}.pdf")
+    headers = {
+        "Content-Disposition": (
+            f'attachment; filename="{ascii_name}"; filename*=UTF-8\'\'{utf8_name}'
+        ),
+        "Cache-Control": "no-store",
+    }
+    return Response(content=pdf, media_type="application/pdf", headers=headers)
 
 
 @router.delete("/{record_id}", status_code=204)

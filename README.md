@@ -8,14 +8,14 @@
 
 ## 功能
 
-| 模块           | 状态      | 说明                                                                          |
-| -------------- | --------- | ----------------------------------------------------------------------------- |
-| Dashboard 总览 | ✅        | 真实统计、碱基环形/柱状图、GC 趋势、最近记录与详情、快捷操作                  |
-| DNA 序列分析   | ✅        | 手动/FASTA 输入、严格校验、A/T/G/C/N 统计、GC/AT、三条转换链、复制、保存历史  |
-| 序列差异比较   | ✅        | Biopython 全局比对、替换/插入/缺失与参考坐标、对齐高亮、图例、保存比对记录    |
-| 数据可视化     | ✅        | ECharts 环形/柱状/GC-AT 图、可配置滑动窗口曲线、长度分布，真实数据 + 演示标识 |
-| 历史记录与报告 | 🚧 阶段 8 | 后端 CRUD 已就绪，列表页与 PDF 报告待完成                                     |
-| 系统设置       | ✅        | 外观/主题、本地工作区信息（中文）                                             |
+| 模块           | 状态 | 说明                                                                          |
+| -------------- | ---- | ----------------------------------------------------------------------------- |
+| Dashboard 总览 | ✅   | 真实统计、碱基环形/柱状图、GC 趋势、最近记录与详情、快捷操作                  |
+| DNA 序列分析   | ✅   | 手动/FASTA 输入、严格校验、A/T/G/C/N 统计、GC/AT、三条转换链、复制、保存历史  |
+| 序列差异比较   | ✅   | Biopython 全局比对、替换/插入/缺失与参考坐标、对齐高亮、图例、保存比对记录    |
+| 数据可视化     | ✅   | ECharts 环形/柱状/GC-AT 图、可配置滑动窗口曲线、长度分布，真实数据 + 演示标识 |
+| 历史记录与报告 | ✅   | 搜索、本地日期筛选、分页、详情、删除确认、刷新、中文 PDF 报告（含碱基分布图） |
+| 系统设置       | ✅   | 外观/主题、本地工作区信息（中文）                                             |
 
 计算口径：GC = (G + C) / (A + T + G + C)，N 计入长度与计数但不进分母；RNA 为同向转录（逐位 T→U）。所有演示数据均明确标注「演示数据」，不会写入数据库。
 
@@ -23,7 +23,7 @@
 
 - 前端：React 19、Vite 8、TypeScript 6、Tailwind CSS 4、TanStack Router/Query/Table、shadcn/ui、ECharts、Lucide
 - 后端：Python 3.12、FastAPI、SQLAlchemy 2、Biopython、SQLite
-- 报告：ReportLab（阶段 8）
+- 报告：ReportLab（A4 PDF，含中文字体与碱基分布图）
 
 ## 目录
 
@@ -86,7 +86,7 @@ pnpm lint
 
 # 后端
 cd server
-.venv/Scripts/python.exe -m pytest tests -q   # 45 个用例（DNA/比对/API）
+.venv/Scripts/python.exe -m pytest tests -q   # 48 个用例（DNA/比对/API/报告）
 ```
 
 ## 环境变量
@@ -117,6 +117,7 @@ GET    /api/history?q=&page=&page_size=
 GET    /api/history/{id}
 DELETE /api/history/{id}
 GET    /api/history/{id}/gc-windows
+GET    /api/history/{id}/report
 GET    /api/stats/overview
 POST   /api/compare
 POST   /api/comparisons

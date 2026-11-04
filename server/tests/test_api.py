@@ -180,3 +180,54 @@ def test_stats_reflect_saved_records(client):
     assert body["average_gc"] == 100.0
     assert body["base_counts"]["g"] == 2
     assert body["recent"][0]["name"] == "统计样本"
+
+
+def test_history_date_filter(client):
+    from datetime import datetime
+
+    client.post(
+        "/api/history",
+        json={"sequence_name": "日期样本", "original_sequence": "ATGC"},
+    )
+    today = datetime.now().astimezone().date().isoformat()
+
+    matched = client.get(
+        "/api/history",
+        params={"date_from": today, "date_to": today},
+    ).json()
+    assert matched["total"] == 1
+
+    future = client.get(
+        "/api/history",
+        params={"date_from": "2999-01-01", "date_to": "2999-12-31"},
+    ).json()
+    assert future["total"] == 0
+
+    inverted = client.get(
+        "/api/history",
+        params={"date_from": "2999-12-31", "date_to": "2999-01-01"},
+    ).json()
+    assert inverted["total"] == 0
+
+
+def test_history_report_returns_pdf(client):
+    created = client.post(
+        "/api/history",
+        json={
+            "sequence_name": "报告样本",
+            "original_sequence": "ATGGTGCATCTGACTCCTGAGGAGAAGTCTGCCGTTACTGCCCTGTGGG",
+        },
+    ).json()
+
+    response = client.get(f"/api/history/{created['id']}/report")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "attachment" in response.headers["content-disposition"]
+    assert response.content.startswith(b"%PDF")
+    assert len(response.content) > 2000
+
+
+def test_history_report_missing_record(client):
+    response = client.get("/api/history/9999/report")
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"

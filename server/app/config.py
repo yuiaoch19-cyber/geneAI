@@ -17,7 +17,7 @@ DATABASE_PATH = Path(os.getenv("GENEAI_DB_PATH", BASE_DIR / "geneai.db"))
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_PATH.as_posix()}")
 
 APP_NAME = "GeneAI"
-APP_VERSION = "0.6.0"
+APP_VERSION = "0.8.0"
 # 序列算法口径版本：写入数据库，便于后续统计口径升级时区分历史记录。
 ALGORITHM_VERSION = "1.0"
 

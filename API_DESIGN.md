@@ -1,13 +1,13 @@
 # GeneAI API 设计
 
-| 项目 | 内容                                                            |
-| ---- | --------------------------------------------------------------- |
-| 风格 | REST + JSON                                                     |
-| 基址 | `http://127.0.0.1:8000/api`（开发期由 Vite 代理 `/api`）        |
-| 版本 | `0.6.0`（阶段 6：分析 / FASTA / 历史 / 比对均已实现）           |
-| 编码 | UTF-8；JSON 为 `application/json`，上传为 `multipart/form-data` |
-| 时间 | UTC ISO 8601，输出以 `Z` 结尾，如 `2026-11-05T00:09:00Z`        |
-| 分页 | `page`（1-based）+ `page_size`（1–100），响应带 `total/pages`   |
+| 项目 | 内容                                                             |
+| ---- | ---------------------------------------------------------------- |
+| 风格 | REST + JSON                                                      |
+| 基址 | `http://127.0.0.1:8000/api`（开发期由 Vite 代理 `/api`）         |
+| 版本 | `0.8.0`（阶段 8：分析 / FASTA / 历史 / 比对 / PDF 报告均已实现） |
+| 编码 | UTF-8；JSON 为 `application/json`，上传为 `multipart/form-data`  |
+| 时间 | UTC ISO 8601，输出以 `Z` 结尾，如 `2026-11-05T00:09:00Z`         |
+| 分页 | `page`（1-based）+ `page_size`（1–100），响应带 `total/pages`    |
 
 > FastAPI 自动生成 `/docs` 与 `/openapi.json`；本文档与实现保持一致。
 
@@ -112,6 +112,7 @@ allow_headers = ["*"]
 | GET    | `/api/history/{id}`            | 历史详情                 |
 | DELETE | `/api/history/{id}`            | 删除历史记录             |
 | GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据         |
+| GET    | `/api/history/{id}/report`     | 导出 PDF 分析报告        |
 | GET    | `/api/stats/overview`          | Dashboard 聚合统计       |
 | POST   | `/api/compare`                 | 双序列全局比对（不写库） |
 | POST   | `/api/comparisons`             | 比对并保存一条记录       |
@@ -119,7 +120,7 @@ allow_headers = ["*"]
 | GET    | `/api/comparisons/{id}`        | 比对详情（含对齐与差异） |
 | DELETE | `/api/comparisons/{id}`        | 删除比对记录             |
 
-规划中：`GET /api/history/{id}/report`（PDF 报告，阶段 8）。
+所有接口均为相对路径，前端通过 Vite 代理 `/api` 访问 `http://127.0.0.1:8000`。
 
 ---
 
@@ -131,7 +132,7 @@ allow_headers = ["*"]
 {
   "status": "ok",
   "app": "GeneAI",
-  "version": "0.5.0",
+  "version": "0.8.0",
   "database": "ok"
 }
 ```
@@ -275,6 +276,10 @@ FASTA 头取 `record.id` 的首个空白词，截断到 120 字符；无头时�
 | `page`             | int    | 1    | 页码                                                 |
 | `page_size`        | int    | 10   | 1–100                                                |
 | `include_sequence` | bool   | true | 是否返回完整 `original_sequence`；列表拉取建议 false |
+| `date_from`        | date   | —    | 起始本地日期（含），格式 `YYYY-MM-DD`                |
+| `date_to`          | date   | —    | 结束本地日期（含），格式 `YYYY-MM-DD`                |
+
+日期按 **本地时区** 的自然日解释：后端把 `date_from` 的本地 00:00 与 `date_to` 次日的本地 00:00 转成 UTC 后比较，因此东八区凌晨保存的记录不会被漏掉。
 
 响应 `200`：
 
@@ -326,6 +331,22 @@ FASTA 头取 `record.id` 的首个空白词，截断到 120 字符；无头时�
 
 - `start`/`end` 为 0-based、左闭右开；只返回完整窗口。
 - 窗口内 ACGT 为 0 时 `gc` 为 `0.0`（格式化前为 `null` 的约定在阶段 6 统一）。
+
+### 5.6 `GET /api/history/{id}/report`
+
+按指定历史记录生成 A4 PDF 报告，内容来自数据库中的真实记录，不使用前端数据。
+
+响应 `200`，`Content-Type: application/pdf`：
+
+```
+Content-Disposition: attachment; filename="GeneAI-report-1.pdf"; filename*=UTF-8''GeneAI-%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A-1.pdf
+Cache-Control: no-store
+```
+
+- 报告包含：GeneAI 标题、序列名称、分析时间、数据来源、算法版本、序列长度、A/T/C/G/N 数量与占比、GC/AT、A/T/G/C 饼图、原始序列、互补链、反向互补链、RNA 转录、GC 口径与免责声明。
+- 中文字体优先使用 Windows `msyh.ttc` / `msyhbd.ttc`，退回 `simhei.ttf`、`simsun.ttc`，最终退回 ReportLab `STSong-Light`。
+- 序列超过 5,000 bp 时仅展示前 5,000 bp 并注明；其余统计仍按完整序列计算。
+- 记录不存在返回 `404 NOT_FOUND`；生成失败或结果异常返回 `500 REPORT_FAILED`。
 
 ---
 

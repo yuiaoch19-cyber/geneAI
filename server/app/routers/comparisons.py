@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Response
@@ -26,6 +26,7 @@ from ..schemas import (
 )
 from ..services import dna
 from ..services.alignment import align_pair
+from ..services.dates import local_day_start_utc
 
 router = APIRouter(prefix="/comparisons", tags=["comparisons"])
 preview_router = APIRouter(tags=["comparisons"])
@@ -168,6 +169,8 @@ def list_comparisons(
     q: str | None = Query(default=None, max_length=120),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> ComparisonPage:
     statement = select(Comparison)
@@ -176,6 +179,14 @@ def list_comparisons(
         pattern = f"%{q.strip()}%"
         statement = statement.where(Comparison.name.like(pattern))
         count_statement = count_statement.where(Comparison.name.like(pattern))
+    if date_from:
+        bound = local_day_start_utc(date_from)
+        statement = statement.where(Comparison.created_at >= bound)
+        count_statement = count_statement.where(Comparison.created_at >= bound)
+    if date_to:
+        bound = local_day_start_utc(date_to + timedelta(days=1))
+        statement = statement.where(Comparison.created_at < bound)
+        count_statement = count_statement.where(Comparison.created_at < bound)
 
     total = db.scalar(count_statement) or 0
     rows = db.scalars(

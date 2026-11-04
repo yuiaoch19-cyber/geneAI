@@ -155,6 +155,8 @@ export async function listAnalyses(
     page?: number
     pageSize?: number
     includeSequence?: boolean
+    dateFrom?: string
+    dateTo?: string
   } = {}
 ): Promise<AnalysisPage> {
   const search = new URLSearchParams()
@@ -162,6 +164,8 @@ export async function listAnalyses(
   search.set('page', String(params.page ?? 1))
   search.set('page_size', String(params.pageSize ?? 10))
   if (params.includeSequence === false) search.set('include_sequence', 'false')
+  if (params.dateFrom) search.set('date_from', params.dateFrom)
+  if (params.dateTo) search.set('date_to', params.dateTo)
 
   const raw = await api.get<RawPage>(`/history?${search.toString()}`)
   return {
@@ -179,6 +183,10 @@ export async function getAnalysis(id: number): Promise<AnalysisRecord> {
 
 export async function deleteAnalysis(id: number): Promise<void> {
   await api.delete(`/history/${id}`)
+}
+
+export async function downloadAnalysisReport(id: number): Promise<Blob> {
+  return api.download(`/history/${id}/report`)
 }
 
 export async function getStatsOverview(): Promise<StatsOverview> {
@@ -290,12 +298,20 @@ export async function saveComparison(
 }
 
 export async function listComparisons(
-  params: { q?: string; page?: number; pageSize?: number } = {}
+  params: {
+    q?: string
+    page?: number
+    pageSize?: number
+    dateFrom?: string
+    dateTo?: string
+  } = {}
 ): Promise<ComparisonPage> {
   const search = new URLSearchParams()
   if (params.q) search.set('q', params.q)
   search.set('page', String(params.page ?? 1))
   search.set('page_size', String(params.pageSize ?? 10))
+  if (params.dateFrom) search.set('date_from', params.dateFrom)
+  if (params.dateTo) search.set('date_to', params.dateTo)
 
   const raw = await api.get<RawComparisonPage>(
     `/comparisons?${search.toString()}`
@@ -311,4 +327,9 @@ export async function listComparisons(
 
 export async function deleteComparison(id: number): Promise<void> {
   await api.delete(`/comparisons/${id}`)
+}
+
+export async function getComparison(id: number): Promise<ComparisonRecord> {
+  const raw = await api.get<RawComparison>(`/comparisons/${id}`)
+  return toComparisonRecord(raw)
 }

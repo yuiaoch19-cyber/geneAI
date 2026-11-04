@@ -96,4 +96,24 @@ export const api = {
   post: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   delete: (path: string) => request<void>(path, { method: 'DELETE' }),
+  async download(path: string): Promise<Blob> {
+    let response: Response
+    try {
+      response = await fetch(`${BASE}${path}`)
+    } catch {
+      throw new ApiError('无法连接后端服务，请先启动 FastAPI（端口 8000）。', {
+        code: 'NETWORK_ERROR',
+      })
+    }
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null)
+      const detail = normalizeDetail(payload)
+      throw new ApiError(detail.message, {
+        code: detail.code,
+        field: detail.field,
+        status: response.status,
+      })
+    }
+    return response.blob()
+  },
 }
