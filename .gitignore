@@ -26,6 +26,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Local pnpm store (kept inside the workspace so sandboxed installs can write it)
+.pnpm-store
+
 # Test coverage
 /coverage
 
