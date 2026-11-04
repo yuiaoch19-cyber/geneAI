@@ -21,6 +21,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    // Atomic editors write through dot-prefixed temp directories; watching them
+    // throws EBUSY on Windows and crashes the dev server.
+    watch: {
+      ignored: ['**/.*.tmpdir/**'],
+    },
+  },
   test: {
     silent: 'passed-only',
     unstubEnvs: true,

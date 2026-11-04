@@ -1,37 +1,18 @@
 import { Outlet } from '@tanstack/react-router'
-import { Monitor, Bell, Palette, Wrench, UserCog } from 'lucide-react'
+import { Monitor, Palette } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { Header } from '@/components/layout/header'
+import { AppHeader } from '@/components/layout/app-header'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { SidebarNav } from './components/sidebar-nav'
 
 const sidebarNavItems = [
   {
-    title: 'Profile',
-    href: '/settings',
-    icon: <UserCog size={18} />,
-  },
-  {
-    title: 'Account',
-    href: '/settings/account',
-    icon: <Wrench size={18} />,
-  },
-  {
-    title: 'Appearance',
+    title: '外观与主题',
     href: '/settings/appearance',
     icon: <Palette size={18} />,
   },
   {
-    title: 'Notifications',
-    href: '/settings/notifications',
-    icon: <Bell size={18} />,
-  },
-  {
-    title: 'Display',
+    title: '显示',
     href: '/settings/display',
     icon: <Monitor size={18} />,
   },
@@ -40,21 +21,15 @@ const sidebarNavItems = [
 export function Settings() {
   return (
     <>
-      {/* ===== Top Heading ===== */}
-      <Header>
-        <Search className='me-auto' />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
-      </Header>
+      <AppHeader />
 
       <Main fixed>
         <div className='space-y-0.5'>
           <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>
-            Settings
+            系统设置
           </h1>
           <p className='text-muted-foreground'>
-            Manage your account settings and set e-mail preferences.
+            管理外观、显示与本地工作区偏好。
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />

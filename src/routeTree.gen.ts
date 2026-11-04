@@ -12,6 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedVisualizationRouteImport } from './routes/_authenticated/visualization'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedCompareRouteImport } from './routes/_authenticated/compare'
+import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -52,6 +56,27 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVisualizationRoute =
+  AuthenticatedVisualizationRouteImport.update({
+    id: '/visualization',
+    path: '/visualization',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCompareRoute = AuthenticatedCompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalysisRoute = AuthenticatedAnalysisRouteImport.update({
+  id: '/analysis',
+  path: '/analysis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -211,6 +236,10 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/analysis': typeof AuthenticatedAnalysisRoute
+  '/compare': typeof AuthenticatedCompareRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/visualization': typeof AuthenticatedVisualizationRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -238,6 +267,10 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/analysis': typeof AuthenticatedAnalysisRoute
+  '/compare': typeof AuthenticatedCompareRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/visualization': typeof AuthenticatedVisualizationRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -271,6 +304,10 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
+  '/_authenticated/compare': typeof AuthenticatedCompareRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/visualization': typeof AuthenticatedVisualizationRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -303,6 +340,10 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/analysis'
+    | '/compare'
+    | '/history'
+    | '/visualization'
     | '/errors/$error'
     | '/settings/account'
     | '/settings/appearance'
@@ -330,6 +371,10 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/analysis'
+    | '/compare'
+    | '/history'
+    | '/visualization'
     | '/'
     | '/errors/$error'
     | '/settings/account'
@@ -362,6 +407,10 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/_authenticated/analysis'
+    | '/_authenticated/compare'
+    | '/_authenticated/history'
+    | '/_authenticated/visualization'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
     | '/_authenticated/settings/account'
@@ -415,6 +464,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/visualization': {
+      id: '/_authenticated/visualization'
+      path: '/visualization'
+      fullPath: '/visualization'
+      preLoaderRoute: typeof AuthenticatedVisualizationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/compare': {
+      id: '/_authenticated/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof AuthenticatedCompareRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analysis': {
+      id: '/_authenticated/analysis'
+      path: '/analysis'
+      fullPath: '/analysis'
+      preLoaderRoute: typeof AuthenticatedAnalysisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/(errors)/503': {
@@ -634,6 +711,10 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
+  AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
+  AuthenticatedCompareRoute: typeof AuthenticatedCompareRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedVisualizationRoute: typeof AuthenticatedVisualizationRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
@@ -645,6 +726,10 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
+  AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
+  AuthenticatedCompareRoute: AuthenticatedCompareRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedVisualizationRoute: AuthenticatedVisualizationRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,

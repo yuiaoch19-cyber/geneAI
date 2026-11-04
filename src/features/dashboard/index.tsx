@@ -1,218 +1,231 @@
-import { Button } from '@/components/ui/button'
+import { Link } from '@tanstack/react-router'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { Header } from '@/components/layout/header'
+  Activity,
+  ArrowRight,
+  ChartBar,
+  ChartSpline,
+  ChevronRight,
+  Clock3,
+  Database,
+  Dna,
+  GitCompareArrows,
+  History,
+  Layers,
+  Percent,
+  Plus,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { ChartCard } from '@/components/geneai/chart-card'
+import { EmptyState } from '@/components/geneai/empty-state'
+import { PageHeader } from '@/components/geneai/page-header'
+import { StatCard } from '@/components/geneai/stat-card'
+import { AppHeader } from '@/components/layout/app-header'
 import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { Analytics } from './components/analytics'
-import { Overview } from './components/overview'
-import { RecentSales } from './components/recent-sales'
+
+const quickActions = [
+  {
+    to: '/analysis',
+    icon: Dna,
+    title: 'DNA 序列分析',
+    description: '输入或上传序列，计算碱基组成与链转换',
+  },
+  {
+    to: '/compare',
+    icon: GitCompareArrows,
+    title: '序列差异比较',
+    description: '比对两条序列，定位替换、插入与缺失',
+  },
+  {
+    to: '/visualization',
+    icon: ChartSpline,
+    title: '数据可视化',
+    description: '查看碱基分布与滑动窗口 GC 曲线',
+  },
+  {
+    to: '/history',
+    icon: History,
+    title: '历史记录',
+    description: '检索已保存的分析与 PDF 报告',
+  },
+] as const
 
 export function Dashboard() {
   return (
     <>
-      {/* ===== Top Heading ===== */}
-      <Header>
-        <TopNav links={topNav} className='me-auto' />
-        <Search />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
-      </Header>
-
-      {/* ===== Main ===== */}
+      <AppHeader />
       <Main>
-        <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
-          <div className='flex items-center space-x-2'>
-            <Button>Download</Button>
-          </div>
+        <PageHeader
+          eyebrow='Overview'
+          title='分析总览'
+          description='集中查看序列分析、碱基组成与 GC 含量的整体情况。所有计算均在本地完成。'
+          actions={
+            <>
+              <Badge
+                variant='outline'
+                className='hidden gap-1.5 text-xs font-normal text-muted-foreground sm:inline-flex'
+              >
+                <Database className='size-3' />
+                本地工作区
+              </Badge>
+              <Button asChild size='sm'>
+                <Link to='/analysis'>
+                  <Plus className='size-4' />
+                  新建分析
+                </Link>
+              </Button>
+            </>
+          }
+        />
+
+        <div className='mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+          <StatCard
+            label='总分析次数'
+            value='0'
+            hint='尚未保存任何分析记录'
+            icon={Activity}
+            tone='blue'
+          />
+          <StatCard
+            label='序列数量'
+            value='0'
+            hint='包含差异比较中的两条序列'
+            icon={Layers}
+            tone='teal'
+          />
+          <StatCard
+            label='平均 GC 含量'
+            value='—'
+            unit='%'
+            hint='完成分析后自动计算'
+            icon={Percent}
+            tone='violet'
+          />
+          <StatCard
+            label='最近分析'
+            value='—'
+            hint='还没有记录'
+            icon={Clock3}
+            tone='amber'
+          />
         </div>
-        <Tabs
-          orientation='vertical'
-          defaultValue='overview'
-          className='space-y-4'
-        >
-          <div className='w-full overflow-x-auto pb-2'>
-            <TabsList>
-              <TabsTrigger value='overview'>Overview</TabsTrigger>
-              <TabsTrigger value='analytics'>Analytics</TabsTrigger>
-              <TabsTrigger value='reports' disabled>
-                Reports
-              </TabsTrigger>
-              <TabsTrigger value='notifications' disabled>
-                Notifications
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value='overview' className='space-y-4'>
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Total Revenue
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>$45,231.89</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +20.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Subscriptions
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' />
-                    <circle cx='9' cy='7' r='4' />
-                    <path d='M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+2350</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +180.1% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>Sales</CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <rect width='20' height='14' x='2' y='5' rx='2' />
-                    <path d='M2 10h20' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+12,234</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +19% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Active Now
-                  </CardTitle>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    className='h-4 w-4 text-muted-foreground'
-                  >
-                    <path d='M22 12h-4l-3 9L9 3l-3 9H2' />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className='text-2xl font-bold'>+573</div>
-                  <p className='text-xs text-muted-foreground'>
-                    +201 since last hour
-                  </p>
-                </CardContent>
-              </Card>
+
+        <div className='mt-4 grid gap-4 lg:grid-cols-7'>
+          <ChartCard
+            className='lg:col-span-4'
+            title='碱基组成'
+            description='统计工作区内全部序列的 A / T / G / C 数量'
+            action={
+              <Badge variant='outline' className='text-[10px] font-normal'>
+                尚无数据
+              </Badge>
+            }
+            bodyClassName='flex items-center'
+          >
+            <EmptyState
+              className='w-full'
+              icon={ChartBar}
+              title='还没有可以统计的序列'
+              description='完成第一次 DNA 序列分析后，这里会显示四种碱基的分布。'
+              action={
+                <Button asChild variant='outline' size='sm'>
+                  <Link to='/analysis'>开始分析</Link>
+                </Button>
+              }
+            />
+          </ChartCard>
+
+          <ChartCard
+            className='lg:col-span-3'
+            title='GC 含量趋势'
+            description='按分析时间展示 GC 含量变化'
+            action={
+              <Badge variant='outline' className='text-[10px] font-normal'>
+                尚无数据
+              </Badge>
+            }
+            bodyClassName='flex items-center'
+          >
+            <EmptyState
+              className='w-full'
+              icon={ChartSpline}
+              title='暂无趋势数据'
+              description='至少完成两次分析后，趋势曲线才会具有比较意义。'
+            />
+          </ChartCard>
+        </div>
+
+        <div className='mt-4 grid gap-4 lg:grid-cols-7'>
+          <Card className='gap-0 py-0 shadow-card lg:col-span-4'>
+            <div className='flex items-center justify-between gap-2 border-b border-border/70 px-5 py-4'>
+              <div className='space-y-1'>
+                <h2 className='text-sm font-semibold tracking-tight'>
+                  最近记录
+                </h2>
+                <p className='text-xs text-muted-foreground'>
+                  最新保存的序列分析与差异比较
+                </p>
+              </div>
+              <Button
+                asChild
+                variant='ghost'
+                size='sm'
+                className='h-8 px-2 text-xs text-muted-foreground'
+              >
+                <Link to='/history'>
+                  查看全部
+                  <ArrowRight className='size-3.5' />
+                </Link>
+              </Button>
             </div>
-            <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
-              <Card className='col-span-1 lg:col-span-4'>
-                <CardHeader>
-                  <CardTitle>Overview</CardTitle>
-                </CardHeader>
-                <CardContent className='ps-2'>
-                  <Overview />
-                </CardContent>
-              </Card>
-              <Card className='col-span-1 lg:col-span-3'>
-                <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
-                  <CardDescription>
-                    You made 265 sales this month.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecentSales />
-                </CardContent>
-              </Card>
+            <div className='p-5'>
+              <EmptyState
+                compact
+                icon={History}
+                title='暂无历史记录'
+                description='分析结果保存后会出现在这里，也可以导出为 PDF 报告。'
+                action={
+                  <Button asChild variant='outline' size='sm'>
+                    <Link to='/analysis'>第一次分析</Link>
+                  </Button>
+                }
+              />
             </div>
-          </TabsContent>
-          <TabsContent value='analytics' className='space-y-4'>
-            <Analytics />
-          </TabsContent>
-        </Tabs>
+          </Card>
+
+          <Card className='gap-0 py-0 shadow-card lg:col-span-3'>
+            <div className='border-b border-border/70 px-5 py-4'>
+              <h2 className='text-sm font-semibold tracking-tight'>快捷入口</h2>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                常用的分析工作流
+              </p>
+            </div>
+            <div className='divide-y divide-border/70'>
+              {quickActions.map((action) => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className='group flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-muted/50'
+                >
+                  <span className='mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary'>
+                    <action.icon className='size-4' strokeWidth={1.9} />
+                  </span>
+                  <span className='min-w-0 flex-1 space-y-0.5'>
+                    <span className='block text-sm font-medium text-foreground'>
+                      {action.title}
+                    </span>
+                    <span className='block text-xs leading-relaxed text-muted-foreground'>
+                      {action.description}
+                    </span>
+                  </span>
+                  <ChevronRight className='mt-1 size-4 shrink-0 text-border transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground' />
+                </Link>
+              ))}
+            </div>
+          </Card>
+        </div>
       </Main>
     </>
   )
 }
-
-const topNav = [
-  {
-    title: 'Overview',
-    href: 'dashboard/overview',
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: 'Customers',
-    href: 'dashboard/customers',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Products',
-    href: 'dashboard/products',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Settings',
-    href: 'dashboard/settings',
-    isActive: false,
-    disabled: true,
-  },
-]

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import useDialogState from '@/hooks/use-dialog-state'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Database, Palette, Settings2, SlidersHorizontal } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,64 +12,63 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SignOutDialog } from '@/components/sign-out-dialog'
 
 export function ProfileDropdown() {
-  const [open, setOpen] = useDialogState()
-
   return (
-    <>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
-            <Avatar className='h-8 w-8'>
-              <AvatarImage src='/avatars/01.png' alt='@shadcn' />
-              <AvatarFallback>SN</AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className='w-56' align='end' forceMount>
-          <DropdownMenuLabel className='font-normal'>
-            <div className='flex flex-col gap-1.5'>
-              <p className='text-sm leading-none font-medium'>satnaing</p>
-              <p className='text-xs leading-none text-muted-foreground'>
-                satnaingdev@gmail.com
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem asChild>
-              <Link to='/settings'>
-                Profile
-                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to='/settings'>
-                Billing
-                <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to='/settings'>
-                Settings
-                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>New Team</DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant='destructive' onClick={() => setOpen(true)}>
-            Sign out
-            <DropdownMenuShortcut className='text-current'>
-              ⇧⌘Q
-            </DropdownMenuShortcut>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='relative size-8 rounded-full ring-offset-background focus-visible:ring-2 focus-visible:ring-ring'
+          aria-label='打开本地工作区菜单'
+        >
+          <Avatar className='size-8 border border-border/70'>
+            <AvatarFallback className='bg-primary/10 text-[11px] font-semibold text-primary'>
+              GA
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className='w-60' align='end'>
+        <DropdownMenuLabel className='font-normal'>
+          <div className='flex flex-col gap-1'>
+            <p className='text-sm leading-none font-medium'>本地工作区</p>
+            <p className='text-xs leading-none text-muted-foreground'>
+              GeneAI · 数据保存在本机
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link to='/settings'>
+              <Settings2 />
+              系统设置
+              <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+            </Link>
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <SignOutDialog open={!!open} onOpenChange={setOpen} />
-    </>
+          <DropdownMenuItem asChild>
+            <Link to='/settings/appearance'>
+              <Palette />
+              外观与主题
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to='/settings/display'>
+              <SlidersHorizontal />
+              显示设置
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to='/history'>
+            <Database />
+            本地分析记录
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
