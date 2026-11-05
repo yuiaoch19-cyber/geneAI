@@ -13,17 +13,25 @@ export function AppBrand() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton size='lg' asChild className='gap-2.5'>
+        <SidebarMenuButton
+          size='lg'
+          asChild
+          className='gap-3 px-1.5 hover:bg-transparent data-[state=open]:bg-transparent'
+        >
           <Link to='/' onClick={() => setOpenMobile(false)}>
-            <span className='flex aspect-square size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
-              <Dna className='size-5' strokeWidth={1.9} />
+            <span className='relative flex aspect-square size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-blue-700 text-white shadow-[0_0_26px_-4px_rgba(56,132,255,0.85)] ring-1 ring-white/25'>
+              <Dna className='size-5.5' strokeWidth={1.9} />
+              <span className='absolute inset-0 rounded-2xl bg-white/10 blur-[6px]' />
             </span>
             <span className='grid flex-1 text-start leading-tight'>
-              <span className='truncate text-sm font-semibold tracking-tight'>
+              <span className='truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground'>
                 GeneAI
               </span>
-              <span className='truncate text-[11px] text-muted-foreground'>
-                DNA 序列分析平台
+              <span
+                className='truncate text-[10px] font-medium tracking-[0.16em] text-sidebar-foreground/50 uppercase'
+                aria-label='Bioinformatics Platform'
+              >
+                Bioinformatics
               </span>
             </span>
           </Link>

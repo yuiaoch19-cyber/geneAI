@@ -162,6 +162,12 @@ function readPendingFasta(): PendingFasta | null {
   }
 }
 
+function readPendingDemo(): SequenceAnalysis | null {
+  if (sessionStorage.getItem('geneai:pending-demo') !== '1') return null
+  sessionStorage.removeItem('geneai:pending-demo')
+  return analyzeSequence(DEMO_ANALYSIS.sequence)
+}
+
 function buildSummary(analysis: SequenceAnalysis): string {
   const canonical =
     analysis.counts.a +
@@ -181,7 +187,18 @@ function buildSummary(analysis: SequenceAnalysis): string {
 }
 
 export function SequenceAnalysisPage() {
-  const [pending] = useState(readPendingFasta)
+  const [pending] = useState(() => {
+    const fasta = readPendingFasta()
+    if (fasta) return fasta
+    const demo = readPendingDemo()
+    return demo
+      ? {
+          name: 'HBB 示例片段',
+          content: demo.sequence,
+          analysis: demo,
+        }
+      : null
+  })
   const [name, setName] = useState(pending?.name ?? '')
   const [raw, setRaw] = useState(pending?.content ?? '')
   const [result, setResult] = useState<SequenceAnalysis | null>(

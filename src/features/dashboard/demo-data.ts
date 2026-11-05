@@ -70,6 +70,7 @@ export const DEMO_TREND = [...DEMO_RECORDS]
     id: record.id,
     name: record.name,
     gcContent: record.gcContent,
+    atContent: record.atContent,
     createdAt: record.createdAt,
   }))
 

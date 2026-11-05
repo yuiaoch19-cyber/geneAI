@@ -31,21 +31,21 @@ from reportlab.platypus import (
 from ..models import AnalysisRecord
 
 # 与前端设计令牌保持一致的报告配色。
-PRIMARY = colors.HexColor("#1F4A7D")
-TEAL = colors.HexColor("#12998C")
-BLUE = colors.HexColor("#315F9C")
-AMBER = colors.HexColor("#D39A3C")
-VIOLET = colors.HexColor("#8760C4")
+PRIMARY = colors.HexColor("#1E3A8A")
+A_BLUE = colors.HexColor("#2563EB")
+T_VIOLET = colors.HexColor("#8B5CF6")
+G_AMBER = colors.HexColor("#F59E0B")
+C_GREEN = colors.HexColor("#10B981")
 GRAY = colors.HexColor("#64748B")
 TEXT = colors.HexColor("#1E293B")
 LIGHT = colors.HexColor("#F6F8FA")
 BORDER = colors.HexColor("#E2E8F0")
 
 BASE_COLORS = [
-    ("A", TEAL),
-    ("T", BLUE),
-    ("G", AMBER),
-    ("C", VIOLET),
+    ("A", A_BLUE),
+    ("T", T_VIOLET),
+    ("G", G_AMBER),
+    ("C", C_GREEN),
 ]
 
 # PDF 中单条链最多展示的碱基数；统计仍按完整序列计算。

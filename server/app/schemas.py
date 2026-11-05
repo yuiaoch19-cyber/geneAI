@@ -83,6 +83,7 @@ class GcPoint(BaseModel):
     id: int
     name: str
     gc_content: float
+    at_content: float
     created_at: str
 
 

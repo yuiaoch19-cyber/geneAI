@@ -38,7 +38,9 @@ export function NavGroup({ title, items }: NavGroupProps) {
   const href = useLocation({ select: (location) => location.href })
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      <SidebarGroupLabel className='text-[10px] font-medium tracking-[0.14em] text-sidebar-foreground/35 uppercase'>
+        {title}
+      </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const key = `${item.title}-${item.url}`
@@ -62,6 +64,9 @@ function NavBadge({ children }: { children: ReactNode }) {
   return <Badge className='rounded-full px-1 py-0 text-xs'>{children}</Badge>
 }
 
+const NAV_ITEM_CLASS =
+  'relative h-10 rounded-xl px-3 text-sidebar-foreground/75 transition-colors before:absolute before:inset-y-2.5 before:inset-s-0 before:w-0.5 before:rounded-full before:bg-sky-300 before:opacity-0 before:transition-opacity hover:text-sidebar-foreground data-[active=true]:text-white data-[active=true]:shadow-[0_10px_24px_-16px_rgba(37,99,235,1)] data-[active=true]:before:opacity-100'
+
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
   const { setOpenMobile } = useSidebar()
   return (
@@ -70,6 +75,7 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
         asChild
         isActive={checkIsActive(href, item)}
         tooltip={item.title}
+        className={NAV_ITEM_CLASS}
       >
         <Link to={item.url} onClick={() => setOpenMobile(false)}>
           {item.icon && <item.icon />}
@@ -97,7 +103,7 @@ function SidebarMenuCollapsible({
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip={item.title}>
+          <SidebarMenuButton tooltip={item.title} className={NAV_ITEM_CLASS}>
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
@@ -141,6 +147,7 @@ function SidebarMenuCollapsedDropdown({
           <SidebarMenuButton
             tooltip={item.title}
             isActive={checkIsActive(href, item)}
+            className={NAV_ITEM_CLASS}
           >
             {item.icon && <item.icon />}
             <span>{item.title}</span>

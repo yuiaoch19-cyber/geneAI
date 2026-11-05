@@ -44,6 +44,7 @@ def overview(db: Session = Depends(get_db)) -> StatsOverview:
             AnalysisRecord.id,
             AnalysisRecord.sequence_name,
             AnalysisRecord.gc_content,
+            AnalysisRecord.at_content,
             AnalysisRecord.created_at,
         )
         .order_by(AnalysisRecord.created_at.desc(), AnalysisRecord.id.desc())
@@ -54,6 +55,7 @@ def overview(db: Session = Depends(get_db)) -> StatsOverview:
             id=row.id,
             name=row.sequence_name,
             gc_content=row.gc_content,
+            at_content=row.at_content,
             created_at=iso(row.created_at) or "",
         )
         for row in reversed(trend_rows)

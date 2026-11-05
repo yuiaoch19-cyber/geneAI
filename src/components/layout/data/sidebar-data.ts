@@ -26,7 +26,7 @@ export const sidebarData: SidebarData = {
       title: '分析工作台',
       items: [
         {
-          title: '总览',
+          title: '分析总览',
           url: '/',
           icon: LayoutDashboard,
         },
@@ -36,7 +36,7 @@ export const sidebarData: SidebarData = {
           icon: Dna,
         },
         {
-          title: '序列差异比较',
+          title: '序列比对',
           url: '/compare',
           icon: GitCompareArrows,
         },

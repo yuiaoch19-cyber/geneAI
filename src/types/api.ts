@@ -36,6 +36,7 @@ export interface GcTrendPoint {
   id: number
   name: string
   gcContent: number
+  atContent: number
   createdAt: string
 }
 

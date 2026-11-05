@@ -4,11 +4,11 @@
  */
 
 export const BASE_COLORS = {
-  a: '#12998c',
-  t: '#315f9c',
-  g: '#d39a3c',
-  c: '#8760c4',
-  n: '#8b95a5',
+  a: '#2563eb',
+  t: '#8b5cf6',
+  g: '#f59e0b',
+  c: '#10b981',
+  n: '#94a3b8',
 } as const
 
 export const BASE_NAMES = {

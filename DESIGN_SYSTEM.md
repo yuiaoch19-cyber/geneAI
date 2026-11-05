@@ -33,70 +33,89 @@
 
 ```css
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
 
   /* 中性色 */
-  --background: oklch(0.984 0.003 230); /* 页面底色，极浅冷灰 */
-  --foreground: oklch(0.22 0.03 250); /* 主文字，近墨蓝 */
-  --card: oklch(1 0 0); /* 卡片纯白 */
-  --card-foreground: oklch(0.22 0.03 250);
+  --background: oklch(0.977 0.004 264); /* 极浅冷灰白 */
+  --foreground: oklch(0.22 0.03 258); /* 近墨蓝主文字 */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.03 258);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 250);
-  --muted: oklch(0.962 0.006 240); /* 次级背景 */
-  --muted-foreground: oklch(0.52 0.02 250); /* 说明文字 */
-  --border: oklch(0.915 0.008 240);
-  --input: oklch(0.915 0.008 240);
+  --popover-foreground: oklch(0.22 0.03 258);
+  --muted: oklch(0.962 0.008 255);
+  --muted-foreground: oklch(0.54 0.028 258);
+  --border: oklch(0.925 0.01 258);
+  --input: oklch(0.905 0.012 258);
 
-  /* 品牌主色：深海蓝 */
-  --primary: oklch(0.34 0.072 245);
-  --primary-foreground: oklch(0.985 0.005 230);
+  /* 品牌主色：生物科技蓝 #2563EB */
+  --primary: oklch(0.546 0.215 262.9);
+  --primary-foreground: oklch(0.985 0.004 247.858);
 
-  /* 辅助色：青绿 */
-  --secondary: oklch(0.955 0.015 200);
-  --secondary-foreground: oklch(0.32 0.06 220);
-  --accent: oklch(0.945 0.022 190);
-  --accent-foreground: oklch(0.3 0.05 210);
+  /* 辅助色：淡青 */
+  --secondary: oklch(0.958 0.012 255);
+  --secondary-foreground: oklch(0.32 0.05 260);
+  --accent: oklch(0.955 0.02 210);
+  --accent-foreground: oklch(0.32 0.05 230);
 
   /* 语义色 */
-  --destructive: oklch(0.577 0.245 27.325);
-  --success: oklch(0.62 0.13 155);
-  --warning: oklch(0.75 0.15 75);
-  --info: oklch(0.62 0.1 230);
+  --destructive: oklch(0.6 0.21 25);
+  --success: oklch(0.66 0.15 158);
+  --warning: oklch(0.76 0.15 70);
+  --info: oklch(0.58 0.14 250);
+  --ring: oklch(0.62 0.16 258);
 
-  /* 图表色板：可直接用于碱基映射 */
-  --chart-1: oklch(0.66 0.11 185); /* 青绿 · A */
-  --chart-2: oklch(0.48 0.1 245); /* 深海蓝 · T */
-  --chart-3: oklch(0.58 0.16 300); /* 紫 · C */
-  --chart-4: oklch(0.76 0.14 80); /* 琥珀 · G */
-  --chart-5: oklch(0.6 0.03 250); /* 石板灰 · N */
+  /* 图表色板：A 蓝 / T 紫 / C 绿 / G 琥珀 / N 灰 */
+  --chart-1: oklch(0.546 0.215 262.9); /* A */
+  --chart-2: oklch(0.606 0.22 292.7); /* T */
+  --chart-3: oklch(0.696 0.16 162.5); /* C */
+  --chart-4: oklch(0.769 0.16 70.1); /* G */
+  --chart-5: oklch(0.704 0.035 256.8); /* N */
 
-  --ring: oklch(0.55 0.09 230);
+  /* 侧栏：两套主题均为深海军蓝 */
+  --sidebar: oklch(0.205 0.035 262);
+  --sidebar-foreground: oklch(0.93 0.012 250);
+  --sidebar-primary: oklch(0.62 0.2 262);
+  --sidebar-primary-foreground: oklch(0.99 0.003 250);
+  --sidebar-accent: oklch(0.42 0.135 262);
+  --sidebar-accent-foreground: oklch(0.985 0.004 250);
+  --sidebar-border: oklch(1 0 0 / 9%);
 }
 ```
 
 ### 2.2 深色模式
 
-`.dark` 下保持同一色相，提高明度、降低彩度：
+`.dark` 下保持同一色相，降低明度、提高图表对比：
 
 ```css
 .dark {
-  --background: oklch(0.16 0.02 250);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.2 0.02 250);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.22 0.02 250);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.27 0.02 250);
-  --muted-foreground: oklch(0.72 0.015 240);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --primary: oklch(0.74 0.09 220); /* 深色下主色变亮，保证对比 */
-  --primary-foreground: oklch(0.2 0.03 250);
-  --secondary: oklch(0.27 0.03 230);
-  --secondary-foreground: oklch(0.92 0.01 240);
-  --accent: oklch(0.28 0.035 210);
-  --accent-foreground: oklch(0.94 0.01 240);
-  --ring: oklch(0.6 0.08 220);
+  --background: oklch(0.17 0.02 258);
+  --foreground: oklch(0.955 0.006 250);
+  --card: oklch(0.215 0.024 258);
+  --card-foreground: oklch(0.955 0.006 250);
+  --popover: oklch(0.225 0.024 258);
+  --popover-foreground: oklch(0.955 0.006 250);
+  --muted: oklch(0.27 0.024 258);
+  --muted-foreground: oklch(0.72 0.02 252);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+
+  --primary: oklch(0.66 0.17 258);
+  --primary-foreground: oklch(0.16 0.02 258);
+  --secondary: oklch(0.27 0.026 258);
+  --secondary-foreground: oklch(0.955 0.006 250);
+  --accent: oklch(0.29 0.035 240);
+  --accent-foreground: oklch(0.955 0.006 250);
+  --ring: oklch(0.64 0.14 258);
+
+  --chart-1: oklch(0.66 0.19 262);
+  --chart-2: oklch(0.7 0.18 292);
+  --chart-3: oklch(0.74 0.14 162);
+  --chart-4: oklch(0.8 0.14 72);
+  --chart-5: oklch(0.66 0.03 256);
+
+  --sidebar: oklch(0.155 0.03 262);
+  --sidebar-accent: oklch(0.36 0.11 262);
+  --sidebar-border: oklch(1 0 0 / 8%);
 }
 ```
 
@@ -117,13 +136,13 @@
 
 **碱基语义色（全站统一）**
 
-| 碱基       | 变量        | 浅色模式观感 |
-| ---------- | ----------- | ------------ |
-| A 腺嘌呤   | `--chart-1` | 青绿         |
-| T 胸腺嘧啶 | `--chart-2` | 深海蓝       |
-| C 胞嘧啶   | `--chart-3` | 紫           |
-| G 鸟嘌呤   | `--chart-4` | 琥珀         |
-| N 未知     | `--chart-5` | 石板灰       |
+| 碱基       | 变量        | 浅色模式观感 | 色值      |
+| ---------- | ----------- | ------------ | --------- |
+| A 腺嘌呤   | `--chart-1` | 生物科技蓝   | `#2563EB` |
+| T 胸腺嘧啶 | `--chart-2` | 紫           | `#8B5CF6` |
+| C 胞嘧啶   | `--chart-3` | 绿           | `#10B981` |
+| G 鸟嘌呤   | `--chart-4` | 琥珀         | `#F59E0B` |
+| N 未知     | `--chart-5` | 石板灰       | `#94A3B8` |
 
 图表、图例、序列高亮、PDF 均使用同一映射，不能在不同页面换色。
 
@@ -178,12 +197,13 @@
 
 ### 3.4 圆角与阴影
 
-| Token          | 值              | 用途                     |
-| -------------- | --------------- | ------------------------ |
-| `--radius`     | 0.75rem（12px） | 卡片、弹窗、Sheet        |
-| `rounded-lg`   | 10px            | 输入框、按钮、下拉       |
-| `rounded-md`   | 8px             | Badge、小标签、图标按钮  |
-| `rounded-full` | —               | 头像、状态点、环形图中心 |
+| Token          | 值         | 用途                     |
+| -------------- | ---------- | ------------------------ |
+| `--radius`     | 1rem（16px） | 卡片、弹窗、Sheet        |
+| `rounded-2xl`  | 16px       | 卡片、全局容器           |
+| `rounded-xl`   | 12px       | 输入框、按钮、下拉       |
+| `rounded-md`   | 8px        | Badge、小标签、图标按钮  |
+| `rounded-full` | —          | 头像、状态点、环形图中心 |
 
 阴影（新增 utility，写在 `index.css`）：
 

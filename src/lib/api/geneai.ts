@@ -95,6 +95,7 @@ interface RawStats {
     id: number
     name: string
     gc_content: number
+    at_content: number
     created_at: string
   }[]
   recent: {
@@ -201,6 +202,7 @@ export async function getStatsOverview(): Promise<StatsOverview> {
       id: point.id,
       name: point.name,
       gcContent: point.gc_content,
+      atContent: point.at_content,
       createdAt: point.created_at,
     })),
     recent: raw.recent.map((item) => ({
