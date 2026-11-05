@@ -1,8 +1,8 @@
 # GeneAI · DNA 智能序列分析与可视化平台
 
-面向课程展示的 DNA 序列分析平台。输入或上传 DNA 序列，即可完成碱基组成、GC/AT 含量、互补链、反向互补链、RNA 转录与序列差异比较，并把分析结果保存在本机 SQLite 中。
+面向课程展示的 DNA 序列分析平台。输入或上传 DNA 序列，即可完成碱基组成、GC/AT 含量、互补链、反向互补链、RNA 转录与序列差异比较，并把分析结果保存在本机 SQLite 中，支持导出带碱基分布图的中文 PDF 报告。
 
-前端基于 **shadcn-admin** 二次开发，保留下游的技术栈、组件体系与路由方案。
+前端基于 **shadcn-admin** 二次开发，保留下游的技术栈、组件体系与路由方案；不接入任何大模型或第三方序列服务。
 
 ![DNA 分析页面](docs/screenshots/phase4-analysis-result.png)
 
@@ -24,109 +24,176 @@
 - 前端：React 19、Vite 8、TypeScript 6、Tailwind CSS 4、TanStack Router/Query/Table、shadcn/ui、ECharts、Lucide
 - 后端：Python 3.12、FastAPI、SQLAlchemy 2、Biopython、SQLite
 - 报告：ReportLab（A4 PDF，含中文字体与碱基分布图）
+- 测试：Vitest（纯函数）、pytest（DNA / 比对 / API / 报告）
 
-## 目录
+## 项目结构
 
 ```
-├─ src/                 前端
-│  ├─ features/         页面与业务组件（analysis / dashboard / settings …）
-│  ├─ components/       ui 基础组件 + geneai 业务组件
-│  ├─ lib/              dna.ts 算法、api 客户端、图表主题
-│  ├─ routes/           TanStack Router 文件式路由
-│  └─ styles/           theme.css 设计令牌
-├─ server/              后端
+├─ src/                     前端
+│  ├─ features/             页面与业务组件（analysis / compare / dashboard / visualization / history / settings）
+│  ├─ components/           ui 基础组件 + geneai 业务组件（PageHeader/StatCard/ChartCard/SequenceInput…）
+│  ├─ lib/                  dna.ts 算法、api 客户端、图表主题、演示数据
+│  ├─ routes/               TanStack Router 文件式路由（自动生成 routeTree.gen.ts）
+│  └─ styles/               theme.css 设计令牌
+├─ server/                  后端
 │  ├─ app/
-│  │  ├─ routers/       analyze / history / comparisons / stats
-│  │  ├─ services/      dna.py、fasta.py、alignment.py
-│  │  ├─ models.py      AnalysisRecord / Comparison / Meta
-│  │  ├─ schemas.py     请求与响应模型
-│  │  └─ main.py        FastAPI 入口
-│  ├─ tests/            pytest（DNA + 比对 + API）
+│  │  ├─ routers/           analyze / history / comparisons / stats
+│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、dates.py
+│  │  ├─ models.py          AnalysisRecord / Comparison / Meta
+│  │  ├─ schemas.py         请求与响应模型
+│  │  └─ main.py            FastAPI 入口
+│  ├─ tests/                pytest（DNA + 比对 + API + 报告）
 │  ├─ requirements.txt
 │  └─ .env.example
-├─ docs/screenshots/    各阶段验收截图
-├─ API_DESIGN.md        接口说明
-├─ DATABASE_DESIGN.md   数据库设计
-└─ TEST_PLAN.md         测试计划
+├─ docs/screenshots/        各阶段验收截图与示例报告
+├─ docs/audit/              阶段 9 优化后页面截图（audit-before 为优化前）
+├─ scripts/                 验收脚本（42 项接口断言 + 13 步业务流程）
+├─ API_DESIGN.md            接口说明
+├─ DATABASE_DESIGN.md       数据库设计
+├─ TEST_PLAN.md             测试计划
+└─ PROJECT_SPEC.md 等       项目规格、架构、设计系统与开发计划
 ```
+
+## 环境准备
+
+| 依赖    | 版本要求                | 说明                                       |
+| ------- | ----------------------- | ------------------------------------------ |
+| Node.js | ≥ 22（开发验证 26.5.0） | 前端构建与开发服务器                       |
+| pnpm    | ≥ 10（验证 10.34.9）    | 仓库使用 pnpm，不要混用 npm/yarn           |
+| Python  | **3.12**                | 3.14 下 Biopython 无预编译轮子，安装会卡住 |
+| SQLite  | 随 Python 自带          | 无需单独安装                               |
+| 浏览器  | Chrome / Edge 最新版    | 图表与 PDF 下载                            |
+
+默认端口：前端 `5208`，后端 `8000`。首次运行会自动创建数据库，无需手工建表。
 
 ## 快速开始
 
-### 1. 前端
+### 1. 安装前端依赖
 
 ```bash
 pnpm install
+```
+
+如果提示 `ERR_PNPM_UNEXPECTED_STORE`，说明本机 pnpm store 不一致，可改用：
+
+```bash
+pnpm install --store-dir .pnpm-store
+```
+
+### 2. 启动后端
+
+```bash
+cd server
+python --version   # 应为 3.12.x；若默认是 3.14，请用 py -3.12 -m venv .venv
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt   # macOS/Linux: .venv/bin/python -m pip
+copy .env.example .env                                          # 可选，macOS/Linux: cp
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+启动后访问 http://127.0.0.1:8000/docs 查看 OpenAPI 文档；`GET /api/health` 应返回 `{"status":"ok"}`。健康检查请用浏览器或 curl 访问 **`/api/health`**。
+
+### 3. 启动前端
+
+另开一个终端：
+
+```bash
 pnpm dev --host 127.0.0.1 --port 5208
 ```
 
 打开 http://127.0.0.1:5208 。Vite 已把 `/api` 代理到 `http://127.0.0.1:8000`。
 
-### 2. 后端
-
-需要 Python 3.12（3.14 下 Biopython 无预编译轮子，会触发源码编译）。
-
-```bash
-cd server
-python -m venv .venv
-.venv/Scripts/activate          # macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env            # 可选，按需修改端口/数据库路径
-.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-启动后访问 http://127.0.0.1:8000/docs 查看 OpenAPI 文档。首次启动自动建库 `server/geneai.db`。
-
-### 3. 验证
+### 4. 验证安装
 
 ```bash
 # 前端
-pnpm test:unit        # DNA 纯函数 29 个用例
+pnpm test:unit    # DNA 纯函数与滑动窗口 29 个用例
 pnpm build
 pnpm lint
 
-# 后端
+# 验收脚本（需前后端均已启动）
+pnpm test:api     # 42 项接口断言
+pnpm test:e2e     # 13 步业务流程（Playwright + 系统 Edge），并输出截图
+
+# 后端单元与接口测试
 cd server
-.venv/Scripts/python.exe -m pytest tests -q   # 48 个用例（DNA/比对/API/报告）
+.venv\Scripts\python.exe -m pytest tests -q   # 48 个用例（DNA/比对/API/报告）
+```
+
+## 数据库初始化
+
+- 数据库文件：`server/geneai.db`，后端启动时由 SQLAlchemy 自动创建表（`analysis_records`、`comparisons`、`meta`）。
+- 初始化 SQL 与字段说明见 [DATABASE_DESIGN.md](DATABASE_DESIGN.md)。
+- 旧版本的 `analyses` 表会在启动时自动迁移为 `analysis_records`（SQLite `RENAME COLUMN`）。
+- 清空全部数据（会丢失历史，请先备份）：
+
+```bash
+# 先停止后端
+rm server/geneai.db server/geneai.db-wal server/geneai.db-shm   # Windows 用 del
+# 重新启动后端，自动建空库
 ```
 
 ## 环境变量
 
-后端读取 `server/.env`（不会覆盖真实环境变量），见 `server/.env.example`：
+后端读取 `server/.env`（`python-dotenv` 加载，不覆盖真实环境变量），见 `server/.env.example`：
 
 | 变量                   | 默认                    | 说明                   |
 | ---------------------- | ----------------------- | ---------------------- |
 | `GENEAI_DB_PATH`       | `server/geneai.db`      | SQLite 文件            |
 | `DATABASE_URL`         | `sqlite:///…/geneai.db` | 完整连接串，优先级更高 |
-| `MAX_SEQUENCE_LENGTH`  | `100000`                | 单条序列上限           |
-| `MAX_UPLOAD_BYTES`     | `2097152`               | FASTA 上传上限         |
-| `MAX_ALIGNMENT_LENGTH` | `5000`                  | 单条比对序列上限       |
-| `CORS_ORIGIN_REGEX`    | localhost 任意端口      | 开发期跨域             |
+| `MAX_SEQUENCE_LENGTH`  | `100000`                | 单条序列上限（bp）     |
+| `MAX_UPLOAD_BYTES`     | `2097152`               | FASTA 上传上限（2 MB） |
+| `MAX_ALIGNMENT_LENGTH` | `5000`                  | 单条比对序列上限（bp） |
+| `CORS_ORIGIN_REGEX`    | localhost 任意端口      | 开发期跨域白名单       |
 
-前端可选 `VITE_API_BASE_URL`，默认同源 `/api`。
+前端可选 `VITE_API_BASE_URL`（默认 `/api`），见根目录 `.env.example`。
 
 ## API
 
-阶段 6 已实现：
+全部接口已实现（版本 0.8.0）：
 
 ```
 GET    /api/health
-POST   /api/analyze
-POST   /api/upload/fasta
+POST   /api/analyze                              {sequence, sequence_name?}
+POST   /api/upload/fasta                         multipart file，单条 FASTA
+GET    /api/history?q=&page=&page_size=&date_from=&date_to=&include_sequence=
 POST   /api/history
-GET    /api/history?q=&page=&page_size=
 GET    /api/history/{id}
 DELETE /api/history/{id}
-GET    /api/history/{id}/gc-windows
-GET    /api/history/{id}/report
+GET    /api/history/{id}/gc-windows?window=&step=
+GET    /api/history/{id}/report                  返回 application/pdf
 GET    /api/stats/overview
-POST   /api/compare
+POST   /api/compare                               只比对、不落库
 POST   /api/comparisons
-GET    /api/comparisons?q=&page=&page_size=
+GET    /api/comparisons?q=&page=&page_size=&date_from=&date_to=
 GET    /api/comparisons/{id}
 DELETE /api/comparisons/{id}
 ```
 
-错误统一为 `{ detail, code, field? }`。详见 [API_DESIGN.md](API_DESIGN.md)。
+错误统一为 `{ detail, code, field? }`。完整请求/响应示例见 [API_DESIGN.md](API_DESIGN.md)。
+
+## 常见错误解决方法
+
+1. **`ERR_PNPM_UNEXPECTED_STORE`**：pnpm 全局 store 不一致，使用 `pnpm install --store-dir .pnpm-store`。
+2. **`pip install` 卡在 Biopython 编译**：当前解释器是 Python 3.14，改用 Python 3.12 建 `.venv`。
+3. **页面提示「无法连接后端服务」**：确认 uvicorn 已在 8000 端口启动，且终端无报错；浏览器访问 `http://127.0.0.1:8000/api/health`。
+4. **`Invalid host header` / 跨域失败**：若前端不在 5208 端口，修改 `server/.env` 的 `CORS_ORIGIN_REGEX` 后重启后端。
+5. **端口被占用**：`netstat -ano | findstr :8000` 找到 PID 后结束进程，或改用其他端口（前端需同步修改 `vite.config.ts` 代理目标）。
+6. **Vite 启动后请求一直转圈**：Windows 文件监听被大目录拖慢。仓库已忽略 `server/`、`.pnpm-store/`、`dist/`；若仍出现，关闭占用的文件同步/杀毒实时扫描。
+7. **PDF 中文显示为方块**：优先使用 Windows 的微软雅黑（`msyh.ttc`）。Linux 服务器请安装 Noto Sans CJK 或宋体，代码会自动回退到 `STSong-Light`。
+8. **`database is locked`**：同时有多个后端进程写同一个 `geneai.db`，结束多余进程后重试。
+9. **`pnpm test` 报缺少浏览器**：默认 Vitest 使用浏览器模式。只跑算法测试请用 `pnpm test:unit`。
+10. **比对报 413 `ALIGNMENT_TOO_LONG`**：单条序列超过 5,000 bp，请截短或调大 `MAX_ALIGNMENT_LENGTH`。
+
+## 课程演示建议
+
+1. 打开 Dashboard，指出统计数据、图表与「演示数据」标识。
+2. 在 DNA 分析页粘贴示例序列 → 分析 → 展示 GC/AT、三条转换链 → 保存到历史。
+3. 打开历史记录，演示搜索、日期筛选、详情、删除确认。
+4. 在差异比较页载入示例，讲解 1 处替换 + 1 处插入及参考坐标，保存比对。
+5. 进入数据可视化，切换记录并调整窗口/步长，说明末尾不足窗口的处理策略。
+6. 导出一份 PDF，展示中文字体、指标表与碱基分布图。
+7. 最后打开系统设置，切换深色主题。
 
 ## 说明
 

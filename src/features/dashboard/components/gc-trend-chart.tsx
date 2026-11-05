@@ -73,8 +73,17 @@ export function GcTrendChart({ points, height = 260 }: GcTrendChartProps) {
           type: 'line',
           smooth: 0.25,
           symbol: 'circle',
-          symbolSize: 6,
+          symbolSize: points.length === 1 ? 9 : 6,
           showSymbol: points.length <= 24,
+          label: {
+            show: points.length <= 2,
+            position: 'top',
+            distance: 6,
+            color: theme.text,
+            fontSize: 11,
+            formatter: (params: { value: number | string }) =>
+              `${Number(params.value).toFixed(1)}%`,
+          },
           lineStyle: { width: 2, color: '#12998c' },
           itemStyle: {
             color: '#12998c',
