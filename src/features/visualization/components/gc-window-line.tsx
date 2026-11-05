@@ -56,7 +56,7 @@ export function GcWindowLine({
         nameLocation: 'middle',
         nameGap: 30,
         nameTextStyle: { color: theme.text, fontSize: 10 },
-        axisLabel: { color: theme.text, fontSize: 10 },
+        axisLabel: { color: theme.text, fontSize: 10, hideOverlap: true },
         axisLine: { lineStyle: { color: theme.axisLine } },
         splitLine: { show: false },
       },

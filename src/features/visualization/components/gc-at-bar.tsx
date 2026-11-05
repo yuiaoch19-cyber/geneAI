@@ -68,7 +68,7 @@ export function GcAtBar({ gc, at, height = 260 }: GcAtBarProps) {
           stack: 'ratio',
           barWidth: 42,
           label: {
-            show: true,
+            show: gc >= 8,
             position: 'inside',
             color: '#ffffff',
             fontSize: 12,
@@ -85,7 +85,7 @@ export function GcAtBar({ gc, at, height = 260 }: GcAtBarProps) {
           stack: 'ratio',
           barWidth: 42,
           label: {
-            show: true,
+            show: at >= 8,
             position: 'inside',
             color: '#ffffff',
             fontSize: 12,

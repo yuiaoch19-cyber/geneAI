@@ -125,6 +125,9 @@ function AlignmentRows({ result }: { result: ComparisonResult }) {
           </div>
         )
       })}
+      <p className='text-[11px] text-muted-foreground sm:hidden'>
+        对齐区域可左右滑动，查看每一列碱基。
+      </p>
     </div>
   )
 }
@@ -162,14 +165,20 @@ export function DifferenceTable({
 
   return (
     <div className='max-h-80 overflow-auto rounded-lg border border-border/70'>
-      <table className='w-full caption-bottom text-xs'>
+      <table className='w-full caption-bottom text-xs whitespace-nowrap'>
         <thead className='sticky top-0 bg-muted/80 backdrop-blur'>
           <tr className='border-b border-border/70 text-muted-foreground'>
-            <th className='px-3 py-2 text-start font-medium'>序号</th>
-            <th className='px-3 py-2 text-start font-medium'>类型</th>
-            <th className='px-3 py-2 text-start font-medium'>参考位置</th>
-            <th className='px-3 py-2 text-start font-medium'>参考碱基</th>
-            <th className='px-3 py-2 text-start font-medium'>查询碱基</th>
+            <th className='px-2 py-2 text-start font-medium sm:px-3'>序号</th>
+            <th className='px-2 py-2 text-start font-medium sm:px-3'>类型</th>
+            <th className='px-2 py-2 text-start font-medium sm:px-3'>
+              参考位置
+            </th>
+            <th className='px-2 py-2 text-start font-medium sm:px-3'>
+              参考碱基
+            </th>
+            <th className='px-2 py-2 text-start font-medium sm:px-3'>
+              查询碱基
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -180,10 +189,10 @@ export function DifferenceTable({
                 key={`${item.type}-${item.refPosition}-${index}`}
                 className='border-b border-border/50 last:border-0'
               >
-                <td className='px-3 py-1.5 text-muted-foreground'>
+                <td className='px-2 py-1.5 text-muted-foreground sm:px-3'>
                   {index + 1}
                 </td>
-                <td className='px-3 py-1.5'>
+                <td className='px-2 py-1.5 sm:px-3'>
                   <Badge
                     variant='outline'
                     className={cn('h-5 px-1.5 text-[10px]', meta.className)}
@@ -191,13 +200,15 @@ export function DifferenceTable({
                     {meta.label}
                   </Badge>
                 </td>
-                <td className='px-3 py-1.5 font-mono tabular-nums'>
+                <td className='px-2 py-1.5 font-mono tabular-nums sm:px-3'>
                   {item.type === 'insertion'
                     ? `第 ${item.refPosition} 位后`
                     : item.refPosition}
                 </td>
-                <td className='px-3 py-1.5 font-mono'>{item.refBase ?? '—'}</td>
-                <td className='px-3 py-1.5 font-mono'>
+                <td className='px-2 py-1.5 font-mono sm:px-3'>
+                  {item.refBase ?? '—'}
+                </td>
+                <td className='px-2 py-1.5 font-mono sm:px-3'>
                   {item.queryBase ?? '—'}
                 </td>
               </tr>

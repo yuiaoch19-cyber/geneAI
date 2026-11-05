@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { format } from 'date-fns'
+import { Link } from '@tanstack/react-router'
 import { zhCN } from 'date-fns/locale'
 import {
   Activity,
@@ -60,11 +60,17 @@ export function Dashboard() {
   const hasRealData = !!data && data.totalSequences > 0
   const showDemo = demo && !hasRealData && !isLoading
 
-  const counts = showDemo ? DEMO_BASE_COUNTS : (data?.baseCounts ?? EMPTY_COUNTS)
+  const counts = showDemo
+    ? DEMO_BASE_COUNTS
+    : (data?.baseCounts ?? EMPTY_COUNTS)
   const trend = showDemo ? DEMO_TREND : (data?.gcTrend ?? [])
   const recent = showDemo ? DEMO_RECORDS : (data?.recent ?? [])
-  const totalAnalyses = showDemo ? DEMO_RECORDS.length : (data?.totalAnalyses ?? 0)
-  const totalSequences = showDemo ? DEMO_RECORDS.length : (data?.totalSequences ?? 0)
+  const totalAnalyses = showDemo
+    ? DEMO_RECORDS.length
+    : (data?.totalAnalyses ?? 0)
+  const totalSequences = showDemo
+    ? DEMO_RECORDS.length
+    : (data?.totalSequences ?? 0)
   const averageGc = showDemo ? DEMO_AVERAGE_GC : (data?.averageGc ?? null)
   const lastAnalyzedAt = showDemo
     ? DEMO_LAST_ANALYZED_AT
@@ -101,7 +107,8 @@ export function Dashboard() {
                 欢迎使用 GeneAI
               </h1>
               <p className='max-w-2xl text-sm leading-relaxed text-muted-foreground'>
-                面向课程展示的 DNA 智能序列分析平台。输入或上传序列，即可完成碱基统计、GC
+                面向课程展示的 DNA
+                智能序列分析平台。输入或上传序列，即可完成碱基统计、GC
                 含量分析、链转换与序列差异概览，所有计算都在本机完成。
               </p>
             </div>
@@ -166,7 +173,7 @@ export function Dashboard() {
           />
         ) : null}
 
-        <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+        <div className='grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4'>
           <StatCard
             label='总分析次数'
             value={isLoading ? '—' : formatNumber(totalAnalyses)}
@@ -183,9 +190,7 @@ export function Dashboard() {
           />
           <StatCard
             label='平均 GC 含量'
-            value={
-              isLoading || averageGc === null ? '—' : averageGc.toFixed(1)
-            }
+            value={isLoading || averageGc === null ? '—' : averageGc.toFixed(1)}
             unit={averageGc === null ? undefined : '%'}
             hint={`${demoHint}基于全部序列分析记录`}
             icon={Percent}
@@ -193,7 +198,9 @@ export function Dashboard() {
           />
           <StatCard
             label='最近分析时间'
-            value={isLoading || !lastAnalyzedAt ? '—' : relativeShort(lastAnalyzedAt)}
+            value={
+              isLoading || !lastAnalyzedAt ? '—' : relativeShort(lastAnalyzedAt)
+            }
             hint={
               lastAnalyzedAt
                 ? `${demoHint}${format(new Date(lastAnalyzedAt), 'yyyy-MM-dd HH:mm')}`
@@ -204,9 +211,9 @@ export function Dashboard() {
           />
         </div>
 
-        <div className='grid gap-4 lg:grid-cols-12'>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-12'>
           <ChartCard
-            className='md:col-span-6 lg:col-span-4'
+            className='md:col-span-1 lg:col-span-4'
             title='碱基分布'
             description='A / T / G / C 在全部序列中的占比'
             action={
@@ -235,7 +242,7 @@ export function Dashboard() {
           </ChartCard>
 
           <ChartCard
-            className='md:col-span-6 lg:col-span-4'
+            className='md:col-span-1 lg:col-span-4'
             title='碱基数量统计'
             description='四种碱基与 N 的出现次数'
             action={
@@ -264,7 +271,7 @@ export function Dashboard() {
           </ChartCard>
 
           <ChartCard
-            className='lg:col-span-4'
+            className='md:col-span-2 lg:col-span-4'
             title='GC 含量趋势'
             description='按分析时间查看 GC 含量变化'
             action={

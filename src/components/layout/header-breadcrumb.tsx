@@ -21,14 +21,15 @@ export function HeaderBreadcrumb() {
   return (
     <nav
       aria-label='面包屑'
-      className='flex min-w-0 items-center gap-1 text-sm text-muted-foreground'
+      className='flex min-w-0 items-center gap-1 text-sm whitespace-nowrap text-muted-foreground'
     >
       <Link
         to='/'
-        className='flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors hover:text-foreground'
+        className='flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors hover:text-foreground'
+        aria-label='返回总览'
       >
         <LayoutDashboard className='size-4' />
-        <span>总览</span>
+        <span className='hidden sm:inline'>总览</span>
       </Link>
       {match ? (
         <>

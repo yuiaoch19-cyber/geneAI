@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check, Copy, Dna, FlaskConical, Info, Loader2, Save } from 'lucide-react'
+import {
+  Check,
+  Copy,
+  Dna,
+  FlaskConical,
+  Info,
+  Loader2,
+  Save,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { createAnalysis } from '@/lib/api/geneai'
-import { statsKeys } from '@/hooks/use-stats-overview'
 import { DEMO_ANALYSIS } from '@/lib/demo-sequences'
 import {
   analyzeSequence,
@@ -13,6 +20,7 @@ import {
   type BaseCounts,
   type SequenceAnalysis,
 } from '@/lib/dna'
+import { statsKeys } from '@/hooks/use-stats-overview'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -145,8 +153,7 @@ function readPendingFasta(): PendingFasta | null {
     const headerName = header?.[1]?.trim().split(/\s+/)[0]
     return {
       name:
-        headerName ||
-        (parsed.name ? parsed.name.replace(/\.[^.]+$/, '') : ''),
+        headerName || (parsed.name ? parsed.name.replace(/\.[^.]+$/, '') : ''),
       content: normalizeSequence(parsed.content).sequence,
       analysis: analyzeSequence(parsed.content),
     }
@@ -157,7 +164,10 @@ function readPendingFasta(): PendingFasta | null {
 
 function buildSummary(analysis: SequenceAnalysis): string {
   const canonical =
-    analysis.counts.a + analysis.counts.t + analysis.counts.g + analysis.counts.c
+    analysis.counts.a +
+    analysis.counts.t +
+    analysis.counts.g +
+    analysis.counts.c
   return [
     `GeneAI 序列分析${analysis.name ? ` · ${analysis.name}` : ''}`,
     `长度: ${analysis.length} bp`,
@@ -224,7 +234,6 @@ export function SequenceAnalysisPage() {
       sequence: result.sequence,
     })
   }
-
 
   const handleCopy = async (text: string, label: string) => {
     try {
@@ -377,7 +386,7 @@ export function SequenceAnalysisPage() {
             </div>
           </Card>
 
-          <Card className='min-w-0 gap-0 py-0 shadow-card'>
+          <Card className='min-w-0 gap-0 py-0 shadow-card xl:row-span-2'>
             <div className='flex items-center justify-between gap-2 border-b border-border/70 px-5 py-4'>
               <div className='space-y-1'>
                 <h2 className='text-sm font-semibold tracking-tight'>
@@ -443,7 +452,9 @@ export function SequenceAnalysisPage() {
                   <div className='grid grid-cols-5 gap-2'>
                     {baseOrder.map((base) => {
                       const count = result.counts[base.key]
-                      const share = result.length ? (count / result.length) * 100 : 0
+                      const share = result.length
+                        ? (count / result.length) * 100
+                        : 0
                       return (
                         <div
                           key={base.key}
@@ -472,7 +483,9 @@ export function SequenceAnalysisPage() {
                       variant='outline'
                       size='sm'
                       className='h-8 text-xs'
-                      onClick={() => handleCopy(buildSummary(result), '统计摘要')}
+                      onClick={() =>
+                        handleCopy(buildSummary(result), '统计摘要')
+                      }
                     >
                       <Copy className='size-3.5' />
                       复制统计摘要
@@ -513,43 +526,45 @@ export function SequenceAnalysisPage() {
               )}
             </div>
           </Card>
-        </div>
 
-        <div className='mt-4'>
-          <ChartCard
-            title='计算说明'
-            description='面向初高中生物知识的快速对照'
-          >
-            <div className='grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4'>
-              <div className='space-y-1'>
-                <p className='font-medium'>碱基互补配对</p>
-                <p className='text-xs leading-relaxed text-muted-foreground'>
-                  A 与 T 配对，G 与 C 配对。互补链按此规则逐位替换，得到与输入链反向平行的
-                  3′→5′ 链。
-                </p>
+          <div className='min-w-0 xl:col-start-1 xl:row-start-2'>
+            <ChartCard
+              title='计算说明'
+              description='面向初高中生物知识的快速对照'
+            >
+              <div className='grid gap-4 text-sm sm:grid-cols-2'>
+                <div className='space-y-1'>
+                  <p className='font-medium'>碱基互补配对</p>
+                  <p className='text-xs leading-relaxed text-muted-foreground'>
+                    A 与 T 配对，G 与 C
+                    配对。互补链按此规则逐位替换，得到与输入链反向平行的 3′→5′
+                    链。
+                  </p>
+                </div>
+                <div className='space-y-1'>
+                  <p className='font-medium'>反向互补</p>
+                  <p className='text-xs leading-relaxed text-muted-foreground'>
+                    先求互补链，再整体反向，用于表示 DNA
+                    双链中方向相反的另一条链。
+                  </p>
+                </div>
+                <div className='space-y-1'>
+                  <p className='font-medium'>转录为 RNA</p>
+                  <p className='text-xs leading-relaxed text-muted-foreground'>
+                    以输入的 5′→3′ 序列逐位把 T 替换为 U，得到同向的
+                    RNA（相当于编码链的 RNA 版本）；不会自动取反向互补链。
+                  </p>
+                </div>
+                <div className='space-y-1'>
+                  <p className='font-medium'>模糊碱基 N</p>
+                  <p className='text-xs leading-relaxed text-muted-foreground'>
+                    N 表示未知碱基，会单独计数并计入序列长度，但不计入 GC / AT
+                    的分母；转换链中保持为 N。
+                  </p>
+                </div>
               </div>
-              <div className='space-y-1'>
-                <p className='font-medium'>反向互补</p>
-                <p className='text-xs leading-relaxed text-muted-foreground'>
-                  先求互补链，再整体反向，用于表示 DNA 双链中方向相反的另一条链。
-                </p>
-              </div>
-              <div className='space-y-1'>
-                <p className='font-medium'>转录为 RNA</p>
-                <p className='text-xs leading-relaxed text-muted-foreground'>
-                  以输入的 5′→3′ 序列逐位把 T 替换为 U，得到同向的 RNA（相当于编码链的
-                  RNA 版本）；不会自动取反向互补链。
-                </p>
-              </div>
-              <div className='space-y-1'>
-                <p className='font-medium'>模糊碱基 N</p>
-                <p className='text-xs leading-relaxed text-muted-foreground'>
-                  N 表示未知碱基，会单独计数并计入序列长度，但不计入 GC / AT
-                  的分母；转换链中保持为 N。
-                </p>
-              </div>
-            </div>
-          </ChartCard>
+            </ChartCard>
+          </div>
         </div>
       </Main>
     </>

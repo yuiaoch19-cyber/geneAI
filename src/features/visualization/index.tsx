@@ -207,8 +207,8 @@ export function DataVisualizationPage() {
         />
 
         <Card className='gap-0 py-0 shadow-card'>
-          <div className='flex flex-wrap items-end gap-x-4 gap-y-3 p-4'>
-            <div className='w-full min-w-0 space-y-1.5 sm:w-auto sm:max-w-80 sm:flex-1'>
+          <div className='grid gap-3 p-4 sm:grid-cols-2 sm:items-end xl:grid-cols-[minmax(240px,1fr)_112px_112px_auto_1fr]'>
+            <div className='col-span-2 min-w-0 space-y-1.5 xl:col-span-1'>
               <Label className='text-xs text-muted-foreground'>数据来源</Label>
               <Select
                 value={demo ? 'demo' : active ? String(active.id) : ''}
@@ -283,14 +283,14 @@ export function DataVisualizationPage() {
 
             <Button
               size='sm'
-              className='h-9'
+              className='h-9 w-full justify-self-start sm:w-auto'
               onClick={handleApply}
               disabled={!active || !validation?.ok}
             >
               应用参数
             </Button>
 
-            <div className='ms-auto flex items-center gap-2 pb-1'>
+            <div className='flex items-center gap-2 pb-1 sm:justify-self-end'>
               {demo ? (
                 <Badge
                   variant='outline'
@@ -385,7 +385,7 @@ export function DataVisualizationPage() {
           </Card>
         ) : (
           <>
-            <div className='grid gap-4 lg:grid-cols-2 xl:grid-cols-3'>
+            <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
               <ChartCard
                 title='碱基比例'
                 description='A / T / G / C 在有效碱基中的占比'
@@ -439,7 +439,7 @@ export function DataVisualizationPage() {
               <ChartCard
                 title='GC / AT 含量'
                 description='两种含量之和为 100%，N 不参与'
-                className='lg:col-span-2 xl:col-span-1'
+                className='md:col-span-2 xl:col-span-1'
                 bodyClassName='px-4 py-3'
                 action={
                   <Badge

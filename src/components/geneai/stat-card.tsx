@@ -37,7 +37,7 @@ export function StatCard({
         className
       )}
     >
-      <div className='flex items-start justify-between gap-3 p-5 pb-3'>
+      <div className='flex items-start justify-between gap-3 p-4 pb-3 sm:p-5 sm:pb-3'>
         <p className='text-sm font-medium text-muted-foreground'>{label}</p>
         <span
           className={cn(
@@ -48,9 +48,9 @@ export function StatCard({
           <Icon className='size-4.5' strokeWidth={1.9} />
         </span>
       </div>
-      <div className='px-5 pb-5'>
+      <div className='px-4 pb-4 sm:px-5 sm:pb-5'>
         <div className='flex items-baseline gap-1.5'>
-          <span className='text-[1.75rem] leading-none font-semibold tracking-tight text-foreground tabular-nums'>
+          <span className='text-2xl leading-none font-semibold tracking-tight text-foreground tabular-nums sm:text-[1.75rem]'>
             {value}
           </span>
           {unit ? (
@@ -60,7 +60,7 @@ export function StatCard({
           ) : null}
         </div>
         {hint ? (
-          <p className='mt-2 line-clamp-1 text-xs text-muted-foreground'>
+          <p className='mt-2 line-clamp-2 text-xs text-muted-foreground sm:line-clamp-1'>
             {hint}
           </p>
         ) : null}

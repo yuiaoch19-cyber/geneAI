@@ -23,17 +23,24 @@ export function chartTheme(isDark: boolean) {
   return {
     text: isDark ? '#94a3b8' : '#64748b',
     strongText: isDark ? '#e2e8f0' : '#1e293b',
-    splitLine: isDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(100, 116, 139, 0.14)',
-    axisLine: isDark ? 'rgba(148, 163, 184, 0.28)' : 'rgba(100, 116, 139, 0.22)',
+    splitLine: isDark
+      ? 'rgba(148, 163, 184, 0.16)'
+      : 'rgba(100, 116, 139, 0.14)',
+    axisLine: isDark
+      ? 'rgba(148, 163, 184, 0.28)'
+      : 'rgba(100, 116, 139, 0.22)',
     tooltipBackground: isDark ? '#0b1220' : '#ffffff',
-    tooltipBorder: isDark ? 'rgba(148, 163, 184, 0.28)' : 'rgba(100, 116, 139, 0.18)',
+    tooltipBorder: isDark
+      ? 'rgba(148, 163, 184, 0.28)'
+      : 'rgba(100, 116, 139, 0.18)',
     tooltipText: isDark ? '#e2e8f0' : '#1e293b',
   }
 }
 
-export function formatAxisTime(iso: string): string {
+export function formatAxisTime(iso: string, withSeconds = false): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return iso
   const pad = (value: number) => String(value).padStart(2, '0')
-  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}${withSeconds ? `:${pad(date.getSeconds())}` : ''}`
+  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${time}`
 }

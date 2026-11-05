@@ -308,7 +308,7 @@ export function SequenceComparePage() {
 
         {result ? (
           <div className='space-y-4'>
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'>
+            <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6'>
               <StatCard
                 label='比对评分'
                 value={result.score.toFixed(1)}
@@ -377,7 +377,7 @@ export function SequenceComparePage() {
               <AlignmentView result={result} />
             </ChartCard>
 
-            <div className='grid gap-4 xl:grid-cols-12'>
+            <div className='grid items-start gap-4 xl:grid-cols-12'>
               <Card className='min-w-0 gap-0 py-0 shadow-card xl:col-span-7'>
                 <div className='flex items-center justify-between gap-2 border-b border-border/70 px-5 py-4'>
                   <div>

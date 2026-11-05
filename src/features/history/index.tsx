@@ -194,7 +194,7 @@ export function AnalysisHistoryPage() {
         />
 
         <div className='overflow-hidden rounded-xl border border-border/80 bg-card shadow-card'>
-          <div className='flex flex-col gap-3 border-b border-border/70 px-4 py-3.5 lg:flex-row lg:items-center lg:justify-between'>
+          <div className='flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-4 py-3.5'>
             <div className='flex flex-wrap items-center gap-2'>
               <span className='text-sm font-semibold'>分析记录</span>
               <Badge variant='outline' className='text-[11px] font-normal'>
@@ -217,7 +217,7 @@ export function AnalysisHistoryPage() {
             </div>
           </div>
 
-          <div className='grid gap-2.5 border-b border-border/70 px-4 py-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_150px_150px_auto]'>
+          <div className='grid gap-2.5 border-b border-border/70 px-4 py-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_164px_164px_auto]'>
             <div className='relative'>
               <Search className='pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground' />
               <Input
@@ -231,32 +231,42 @@ export function AnalysisHistoryPage() {
                 aria-label='搜索序列名称'
               />
             </div>
-            <Input
-              type='date'
-              value={dateFrom}
-              max={dateTo || undefined}
-              onChange={(event) => {
-                setDateFrom(event.target.value)
-                setPage(1)
-              }}
-              className='h-9 text-xs'
-              aria-label='开始日期'
-            />
-            <Input
-              type='date'
-              value={dateTo}
-              min={dateFrom || undefined}
-              onChange={(event) => {
-                setDateTo(event.target.value)
-                setPage(1)
-              }}
-              className='h-9 text-xs'
-              aria-label='结束日期'
-            />
+            <div className='flex items-center gap-1.5'>
+              <span className='w-7 shrink-0 text-[11px] text-muted-foreground'>
+                开始
+              </span>
+              <Input
+                type='date'
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(event) => {
+                  setDateFrom(event.target.value)
+                  setPage(1)
+                }}
+                className='h-9 min-w-0 flex-1 text-xs'
+                aria-label='开始日期'
+              />
+            </div>
+            <div className='flex items-center gap-1.5'>
+              <span className='w-7 shrink-0 text-[11px] text-muted-foreground'>
+                结束
+              </span>
+              <Input
+                type='date'
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(event) => {
+                  setDateTo(event.target.value)
+                  setPage(1)
+                }}
+                className='h-9 min-w-0 flex-1 text-xs'
+                aria-label='结束日期'
+              />
+            </div>
             <Button
               variant='ghost'
               size='sm'
-              className='h-9 text-xs text-muted-foreground'
+              className='h-9 justify-self-start text-xs text-muted-foreground lg:justify-self-auto'
               onClick={resetFilters}
               disabled={!hasFilters}
             >
