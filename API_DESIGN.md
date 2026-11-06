@@ -109,6 +109,8 @@ allow_headers = ["*"]
 | POST   | `/api/transcribe`              | DNA → RNA 转录           |
 | POST   | `/api/translate`               | DNA → 蛋白质翻译         |
 | POST   | `/api/mutate`                  | 应用突变并预测后果       |
+| GET    | `/api/variants/search`         | ClinVar 变异查询         |
+| GET    | `/api/variants/{id}`           | ClinVar 单条详情         |
 | POST   | `/api/compare`                 | 双序列全局比对（不写库） |
 | POST   | `/api/upload/fasta`            | 上传并解析单条 FASTA     |
 | POST   | `/api/history`                 | 分析并保存一条历史记录   |
@@ -544,7 +546,81 @@ Cache-Control: no-store
 
 ---
 
-## 9. 前端调用映射
+## 9. 变异数据库（ClinVar，2.0）
+
+### `GET /api/variants/search`
+
+| 参数         | 说明                                             |
+| ------------ | ------------------------------------------------ |
+| `q`          | 基因名、rs 编号、VCV 编号或 ClinVar Variation ID |
+| `query_type` | `auto`（默认）/ `gene` / `variant` / `id`        |
+| `limit`      | 1–20，默认 10                                    |
+
+查询词在发送给 NCBI 前会转换为对应检索式（如 `BRCA1[gene]`、`rs80357906`）。纯 DNA 序列缺少参考基因组、染色体位置与转录本，会直接返回 `400 UNSUPPORTED_QUERY`，不做模糊匹配。
+
+成功响应：
+
+```json
+{
+  "query": "BRCA1",
+  "query_type": "gene",
+  "source": "ClinVar",
+  "total": 16166,
+  "returned": 3,
+  "retrieved_at": "2026-11-06T11:36:13Z",
+  "cached": false,
+  "items": [
+    {
+      "id": "5037508",
+      "accession": "VCV005037508.1",
+      "title": "NM_007294.4(BRCA1):c.3370T>A (p.Phe1124Ile)",
+      "gene": "BRCA1",
+      "variant_type": "single nucleotide variant",
+      "ref_allele": "A",
+      "alt_allele": "T",
+      "genome_build": "GRCh38",
+      "location": {
+        "chromosome": "17",
+        "start": 43092161,
+        "stop": 43092161,
+        "ref": "A",
+        "alt": "T",
+        "band": "17q21.31"
+      },
+      "transcript": "NM_007294.4",
+      "reference_sequence": "NC_000017.11",
+      "clinical_significance": "Uncertain significance",
+      "significance_class": "vus",
+      "review_status_label": "单提交者提供标准",
+      "last_evaluated": "2026-04-23",
+      "phenotypes": ["not provided"],
+      "source": "ClinVar",
+      "url": "https://www.ncbi.nlm.nih.gov/clinvar/variation/5037508/",
+      "retrieved_at": "2026-11-06T11:36:13Z",
+      "missing_fields": ["表型"]
+    }
+  ],
+  "warnings": ["1 条记录存在缺失字段，已用「未提供」或空值标注。"]
+}
+```
+
+`significance_class` 取值：`pathogenic` / `likely_pathogenic` / `vus` / `likely_benign` / `benign` / `conflicting` / `drug_response` / `risk_factor` / `other` / `unknown`。**VUS 固定映射为 `vus`，前端不得显示成致病。**
+
+### `GET /api/variants/{variation_id}`
+
+仅接受数字 Variation ID，返回单条记录与 `retrieved_at`、`missing_fields`。不存在时 `404 NOT_FOUND`。
+
+### 缓存、限流与错误
+
+- 内存缓存 10 分钟（搜索结果与单条详情分别缓存），命中时 `cached: true`；不持久化。
+- 请求间隔控制在约 0.35s（无 API key）或 0.11s（有 key）。
+- `429` → `503 RATE_LIMITED`；`5xx` → `503 DATABASE_UNAVAILABLE`；超时 → `503 DATABASE_TIMEOUT`。
+- 第三方字段缺失不会导致整条失败，而是写入 `missing_fields` 并在 `warnings` 中提示。
+- 临床意义、审查状态与表型均来自 ClinVar 提交者，页面必须同时展示来源、查询时间与原始链接；不得据此给出诊断或用药建议。
+
+---
+
+## 10. 前端调用映射
 
 | 页面/功能 | 前端函数                        | 接口                           |
 | --------- | ------------------------------- | ------------------------------ |
@@ -559,6 +635,8 @@ Cache-Control: no-store
 | 转录演示  | `transcribeSequence`            | `POST /transcribe`             |
 | 翻译演示  | `translateSequence`             | `POST /translate`              |
 | 突变模拟  | `mutateSequence`                | `POST /mutate`                 |
+| 变异查询  | `searchVariants`                | `GET /variants/search`         |
+| 变异详情  | `getVariant`                    | `GET /variants/{id}`           |
 | 保存比对  | `saveComparison`                | `POST /comparisons`            |
 | 比对列表  | `listComparisons`               | `GET /comparisons`             |
 | 删除比对  | `deleteComparison`              | `DELETE /comparisons/{id}`     |
@@ -570,7 +648,7 @@ Query keys：`['stats','overview']`、`['analysis', id]`。写操作成功后 in
 
 ---
 
-## 10. 测试与调试
+## 11. 测试与调试
 
 ```bash
 # 后端单元 + API 测试
@@ -587,7 +665,7 @@ curl -F "file=@demo.fasta" http://127.0.0.1:8000/api/upload/fasta
 
 ---
 
-## 11. 契约同步
+## 12. 契约同步
 
 1. 先改 `server/app/schemas.py` 与路由。
 2. 同步 `src/types/api.ts` 与 `src/lib/api/geneai.ts`（手写映射，不引入代码生成）。
@@ -596,7 +674,7 @@ curl -F "file=@demo.fasta" http://127.0.0.1:8000/api/upload/fasta
 
 ---
 
-## 12. 非目标
+## 13. 非目标
 
 - 不做 GraphQL、WebSocket/SSE、OAuth、API Key（本地单机课程项目）。
 - 不做批量上传、软删除、回收站。

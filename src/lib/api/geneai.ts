@@ -18,6 +18,10 @@ import type {
   StatsOverview,
   TranscriptionResult,
   TranslationResult,
+  VariantLocation,
+  VariantQueryType,
+  VariantRecord,
+  VariantSearchResult,
 } from '@/types/api'
 import { api } from './client'
 
@@ -566,4 +570,115 @@ export async function mutateSequence(
     changedAminoAcids: raw.changed_amino_acids,
     note: raw.note,
   }
+}
+
+interface RawVariantLocation {
+  assembly: string
+  chromosome: string
+  start: number
+  stop: number
+  ref: string
+  alt: string
+  band: string
+}
+
+interface RawVariantRecord {
+  id: string
+  accession: string
+  title: string
+  gene: string
+  genes: string[]
+  variant_type: string
+  ref_allele: string
+  alt_allele: string
+  spdi: string
+  location: RawVariantLocation | null
+  locations: RawVariantLocation[]
+  genome_build: string
+  transcript: string
+  reference_sequence: string
+  clinical_significance: string
+  significance_class: VariantRecord['significanceClass']
+  review_status: string
+  review_status_label: string
+  last_evaluated: string
+  phenotypes: string[]
+  source: string
+  url: string
+  retrieved_at: string
+  missing_fields: string[]
+}
+
+interface RawVariantSearch {
+  query: string
+  query_type: VariantQueryType
+  source: string
+  total: number
+  returned: number
+  retrieved_at: string
+  cached: boolean
+  items: RawVariantRecord[]
+  warnings: string[]
+}
+
+function toVariantLocation(raw: RawVariantLocation): VariantLocation {
+  return { ...raw }
+}
+
+function toVariantRecord(raw: RawVariantRecord): VariantRecord {
+  return {
+    id: raw.id,
+    accession: raw.accession,
+    title: raw.title,
+    gene: raw.gene,
+    genes: raw.genes,
+    variantType: raw.variant_type,
+    refAllele: raw.ref_allele,
+    altAllele: raw.alt_allele,
+    spdi: raw.spdi,
+    location: raw.location ? toVariantLocation(raw.location) : null,
+    locations: raw.locations.map(toVariantLocation),
+    genomeBuild: raw.genome_build,
+    transcript: raw.transcript,
+    referenceSequence: raw.reference_sequence,
+    clinicalSignificance: raw.clinical_significance,
+    significanceClass: raw.significance_class,
+    reviewStatus: raw.review_status,
+    reviewStatusLabel: raw.review_status_label,
+    lastEvaluated: raw.last_evaluated,
+    phenotypes: raw.phenotypes,
+    source: raw.source,
+    url: raw.url,
+    retrievedAt: raw.retrieved_at,
+    missingFields: raw.missing_fields,
+  }
+}
+
+export async function searchVariants(params: {
+  q: string
+  type?: VariantQueryType
+  limit?: number
+}): Promise<VariantSearchResult> {
+  const search = new URLSearchParams({
+    q: params.q,
+    query_type: params.type ?? 'auto',
+    limit: String(params.limit ?? 10),
+  })
+  const raw = await api.get<RawVariantSearch>(`/variants/search?${search}`)
+  return {
+    query: raw.query,
+    queryType: raw.query_type,
+    source: raw.source,
+    total: raw.total,
+    returned: raw.returned,
+    retrievedAt: raw.retrieved_at,
+    cached: raw.cached,
+    items: raw.items.map(toVariantRecord),
+    warnings: raw.warnings,
+  }
+}
+
+export async function getVariant(id: string): Promise<VariantRecord> {
+  const raw = await api.get<{ item: RawVariantRecord }>(`/variants/${id}`)
+  return toVariantRecord(raw.item)
 }

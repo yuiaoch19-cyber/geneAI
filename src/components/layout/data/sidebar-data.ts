@@ -1,5 +1,6 @@
 import {
   ChartSpline,
+  Database,
   Dna,
   FlaskConical,
   GitCompareArrows,
@@ -46,6 +47,11 @@ export const sidebarData: SidebarData = {
           title: '突变模拟',
           url: '/mutation',
           icon: FlaskConical,
+        },
+        {
+          title: '变异数据库',
+          url: '/variants',
+          icon: Database,
         },
         {
           title: '序列比对',

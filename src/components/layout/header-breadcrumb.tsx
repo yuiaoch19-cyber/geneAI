@@ -3,6 +3,9 @@ import { ChevronRight, LayoutDashboard } from 'lucide-react'
 
 const routeLabels: { prefix: string; label: string }[] = [
   { prefix: '/analysis', label: 'DNA 序列分析' },
+  { prefix: '/transcription', label: '转录与翻译' },
+  { prefix: '/mutation', label: '突变模拟' },
+  { prefix: '/variants', label: '变异数据库' },
   { prefix: '/compare', label: '序列差异比较' },
   { prefix: '/visualization', label: '数据可视化' },
   { prefix: '/history', label: '历史记录' },

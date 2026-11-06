@@ -40,7 +40,7 @@
 
 | 层级      | 工具                     | 实际用例数 | 运行命令                                             |
 | --------- | ------------------------ | ---------- | ---------------------------------------------------- |
-| 后端单元  | pytest（`server/tests`） | 137        | `cd server && .venv/Scripts/python.exe -m pytest -q` |
+| 后端单元  | pytest（`server/tests`） | 150        | `cd server && .venv/Scripts/python.exe -m pytest -q` |
 | 前端单元  | Vitest（node 环境）      | 29         | `pnpm test:unit`                                     |
 | 后端接口  | Node fetch 验收脚本      | 42 项断言  | `pnpm test:api`（需后端已启动）                      |
 | 业务流程  | Playwright（系统 Edge）  | 13 步      | `pnpm test:e2e`（需前后端启动）                      |

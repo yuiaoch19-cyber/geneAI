@@ -232,3 +232,66 @@ export interface MutationAnalysis {
   changedAminoAcids: AminoAcidChange[]
   note: string
 }
+
+export type VariantQueryType = "auto" | "gene" | "variant" | "id"
+
+export type SignificanceClass =
+  | "pathogenic"
+  | "likely_pathogenic"
+  | "vus"
+  | "likely_benign"
+  | "benign"
+  | "conflicting"
+  | "drug_response"
+  | "risk_factor"
+  | "other"
+  | "unknown"
+
+export type VariantLocation = {
+  assembly: string
+  chromosome: string
+  start: number
+  stop: number
+  ref: string
+  alt: string
+  band: string
+}
+
+export type VariantRecord = {
+  id: string
+  accession: string
+  title: string
+  gene: string
+  genes: string[]
+  variantType: string
+  refAllele: string
+  altAllele: string
+  spdi: string
+  location: VariantLocation | null
+  locations: VariantLocation[]
+  genomeBuild: string
+  transcript: string
+  referenceSequence: string
+  clinicalSignificance: string
+  significanceClass: SignificanceClass
+  reviewStatus: string
+  reviewStatusLabel: string
+  lastEvaluated: string
+  phenotypes: string[]
+  source: string
+  url: string
+  retrievedAt: string
+  missingFields: string[]
+}
+
+export type VariantSearchResult = {
+  query: string
+  queryType: VariantQueryType
+  source: string
+  total: number
+  returned: number
+  retrievedAt: string
+  cached: boolean
+  items: VariantRecord[]
+  warnings: string[]
+}

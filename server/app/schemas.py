@@ -290,3 +290,58 @@ class MutateOut(BaseModel):
     affected_codon: int | None
     changed_amino_acids: list[AminoAcidChangeOut]
     note: str
+
+class VariantLocationOut(BaseModel):
+    assembly: str
+    chromosome: str
+    start: int
+    stop: int
+    ref: str
+    alt: str
+    band: str = ""
+
+
+class VariantRecordOut(BaseModel):
+    id: str
+    accession: str
+    title: str
+    gene: str
+    genes: list[str]
+    variant_type: str
+    ref_allele: str
+    alt_allele: str
+    spdi: str
+    location: VariantLocationOut | None
+    locations: list[VariantLocationOut]
+    genome_build: str
+    transcript: str
+    reference_sequence: str
+    clinical_significance: str
+    significance_class: str
+    review_status: str
+    review_status_label: str
+    last_evaluated: str
+    phenotypes: list[str]
+    source: str
+    url: str
+    retrieved_at: str
+    missing_fields: list[str]
+
+
+class VariantSearchOut(BaseModel):
+    query: str
+    query_type: str
+    source: str
+    total: int
+    returned: int
+    retrieved_at: str
+    cached: bool
+    items: list[VariantRecordOut]
+    warnings: list[str]
+
+
+class VariantDetailOut(BaseModel):
+    source: str
+    retrieved_at: str
+    cached: bool
+    item: VariantRecordOut

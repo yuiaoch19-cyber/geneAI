@@ -1,6 +1,6 @@
 # GeneAI · DNA 智能序列分析与可视化平台
 
-面向课程展示的 DNA 序列分析平台。输入或上传 DNA 序列，即可完成碱基组成、GC/AT 含量、互补链、反向互补链、RNA 转录与序列差异比较，并把分析结果保存在本机 SQLite 中，支持导出带碱基分布图的中文 PDF 报告。2.0 版本新增转录/翻译动态演示与基因突变模拟，动画和对比结果每一步都来自后端真实算法。
+面向课程展示的 DNA 序列分析平台。输入或上传 DNA 序列，即可完成碱基组成、GC/AT 含量、互补链、反向互补链、RNA 转录与序列差异比较，并把分析结果保存在本机 SQLite 中，支持导出带碱基分布图的中文 PDF 报告。2.0 版本新增转录/翻译动态演示、基因突变模拟，以及基于 NCBI ClinVar 的已知变异注释查询；动画和对比结果每一步都来自后端真实算法。
 
 前端基于 **shadcn-admin** 二次开发，保留下游的技术栈、组件体系与路由方案；不接入任何大模型或第三方序列服务。
 
@@ -16,6 +16,7 @@
 | 数据可视化     | ✅   | ECharts 环形/柱状/GC-AT 图、可配置滑动窗口曲线、长度分布，真实数据 + 演示标识 |
 | 转录与翻译演示 | ✅   | DNA 双螺旋、RNA 聚合酶转录、mRNA 密码子、核糖体/tRNA 翻译、播放控制与状态机   |
 | 基因突变模拟   | ✅   | 替换/插入/缺失、DNA/RNA/蛋白三层对比、后果分类与分析报告                      |
+| 变异数据库     | ✅   | NCBI ClinVar 查询、列表/详情、临床意义与审查状态、原始链接、缓存与频率控制    |
 | ORF 分析       | 🚧   | 后端六阅读框算法与测试已完成；交互页面在 2.0 后续阶段接入                     |
 | 历史记录与报告 | ✅   | 搜索、本地日期筛选、分页、详情、删除确认、刷新、中文 PDF 报告（含碱基分布图） |
 | 系统设置       | ✅   | 外观/主题、本地工作区信息（中文）                                             |
@@ -27,25 +28,25 @@
 - 前端：React 19、Vite 8、TypeScript 6、Tailwind CSS 4、TanStack Router/Query/Table、shadcn/ui、ECharts、Lucide
 - 后端：Python 3.12、FastAPI、SQLAlchemy 2、Biopython、SQLite
 - 报告：ReportLab（A4 PDF，含中文字体与碱基分布图）
-- 测试：Vitest（纯函数）、pytest（DNA / 转录 / 翻译 / ORF / 突变 / 比对 / API / 报告）
+- 测试：Vitest（纯函数）、pytest（DNA / 转录 / 翻译 / ORF / 突变 / ClinVar / 比对 / API / 报告）
 
 ## 项目结构
 
 ```
 ├─ src/                     前端
-│  ├─ features/             页面与业务组件（analysis / compare / dashboard / visualization / history / settings / transcription / mutation）
+│  ├─ features/             页面与业务组件（analysis / compare / dashboard / visualization / history / settings / transcription / mutation / variants）
 │  ├─ components/           ui 基础组件 + geneai 业务组件（PageHeader/StatCard/ChartCard/SequenceInput…）
 │  ├─ lib/                  dna.ts 算法、api 客户端、图表主题、演示数据
 │  ├─ routes/               TanStack Router 文件式路由（自动生成 routeTree.gen.ts）
 │  └─ styles/               theme.css 设计令牌
 ├─ server/                  后端
 │  ├─ app/
-│  │  ├─ routers/           analyze / history / comparisons / stats / central_dogma / mutation
-│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、dates.py、genetic_code.py、transcription.py、translation.py、orf.py、mutation.py
+│  │  ├─ routers/           analyze / history / comparisons / stats / central_dogma / mutation / variants
+│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、dates.py、genetic_code.py、transcription.py、translation.py、orf.py、mutation.py、clinvar.py
 │  │  ├─ models.py          AnalysisRecord / Comparison / Meta
 │  │  ├─ schemas.py         请求与响应模型
 │  │  └─ main.py            FastAPI 入口
-│  ├─ tests/                pytest（DNA / 转录 / 翻译 / ORF / 突变 / 比对 / API / 报告）
+│  ├─ tests/                pytest（DNA / 转录 / 翻译 / ORF / 突变 / ClinVar / 比对 / API / 报告）
 │  ├─ requirements.txt
 │  └─ .env.example
 ├─ docs/screenshots/        各阶段验收截图与示例报告
@@ -121,7 +122,7 @@ pnpm test:e2e     # 13 步业务流程（Playwright + 系统 Edge），并输出
 
 # 后端单元与接口测试
 cd server
-.venv\Scripts\python.exe -m pytest tests -q   # 137 个用例（DNA/转录/翻译/ORF/突变/比对/API/报告）
+.venv\Scripts\python.exe -m pytest tests -q   # 150 个用例（DNA/转录/翻译/ORF/突变/ClinVar/比对/API/报告）
 ```
 
 ## 数据库初始化
@@ -141,14 +142,16 @@ rm server/geneai.db server/geneai.db-wal server/geneai.db-shm   # Windows 用 de
 
 后端读取 `server/.env`（`python-dotenv` 加载，不覆盖真实环境变量），见 `server/.env.example`：
 
-| 变量                   | 默认                    | 说明                   |
-| ---------------------- | ----------------------- | ---------------------- |
-| `GENEAI_DB_PATH`       | `server/geneai.db`      | SQLite 文件            |
-| `DATABASE_URL`         | `sqlite:///…/geneai.db` | 完整连接串，优先级更高 |
-| `MAX_SEQUENCE_LENGTH`  | `100000`                | 单条序列上限（bp）     |
-| `MAX_UPLOAD_BYTES`     | `2097152`               | FASTA 上传上限（2 MB） |
-| `MAX_ALIGNMENT_LENGTH` | `5000`                  | 单条比对序列上限（bp） |
-| `CORS_ORIGIN_REGEX`    | localhost 任意端口      | 开发期跨域白名单       |
+| 变量                   | 默认                    | 说明                         |
+| ---------------------- | ----------------------- | ---------------------------- |
+| `GENEAI_DB_PATH`       | `server/geneai.db`      | SQLite 文件                  |
+| `DATABASE_URL`         | `sqlite:///…/geneai.db` | 完整连接串，优先级更高       |
+| `MAX_SEQUENCE_LENGTH`  | `100000`                | 单条序列上限（bp）           |
+| `MAX_UPLOAD_BYTES`     | `2097152`               | FASTA 上传上限（2 MB）       |
+| `MAX_ALIGNMENT_LENGTH` | `5000`                  | 单条比对序列上限（bp）       |
+| `CORS_ORIGIN_REGEX`    | localhost 任意端口      | 开发期跨域白名单             |
+| `NCBI_EMAIL`           | `dev@geneai.local`      | NCBI E-utilities 联系邮箱    |
+| `NCBI_API_KEY`         | 空                      | 可选；填写后提高请求频率上限 |
 
 前端可选 `VITE_API_BASE_URL`（默认 `/api`），见根目录 `.env.example`。
 
@@ -162,6 +165,8 @@ POST   /api/analyze                              {sequence, sequence_name?}
 POST   /api/transcribe                            {sequence, strand, input_direction}
 POST   /api/translate                             {sequence, strand, input_direction, frame, stop_at_stop}
 POST   /api/mutate                                {sequence, mutation_type, position, alt?, ref?, length?, frame, strand, input_direction}
+GET    /api/variants/search?q=&query_type=&limit=  ClinVar 查询（基因/rs/VCV/ID）
+GET    /api/variants/{variation_id}               ClinVar 单条详情
 POST   /api/upload/fasta                         multipart file，单条 FASTA
 GET    /api/history?q=&page=&page_size=&date_from=&date_to=&include_sequence=
 POST   /api/history

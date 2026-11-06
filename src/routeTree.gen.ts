@@ -13,6 +13,7 @@ import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedVisualizationRouteImport } from './routes/_authenticated/visualization'
+import { Route as AuthenticatedVariantsRouteImport } from './routes/_authenticated/variants'
 import { Route as AuthenticatedTranscriptionRouteImport } from './routes/_authenticated/transcription'
 import { Route as AuthenticatedMutationRouteImport } from './routes/_authenticated/mutation'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
@@ -66,6 +67,11 @@ const AuthenticatedVisualizationRoute =
     path: '/visualization',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedVariantsRoute = AuthenticatedVariantsRouteImport.update({
+  id: '/variants',
+  path: '/variants',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTranscriptionRoute =
   AuthenticatedTranscriptionRouteImport.update({
     id: '/transcription',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof AuthenticatedHistoryRoute
   '/mutation': typeof AuthenticatedMutationRoute
   '/transcription': typeof AuthenticatedTranscriptionRoute
+  '/variants': typeof AuthenticatedVariantsRoute
   '/visualization': typeof AuthenticatedVisualizationRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/history': typeof AuthenticatedHistoryRoute
   '/mutation': typeof AuthenticatedMutationRoute
   '/transcription': typeof AuthenticatedTranscriptionRoute
+  '/variants': typeof AuthenticatedVariantsRoute
   '/visualization': typeof AuthenticatedVisualizationRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/mutation': typeof AuthenticatedMutationRoute
   '/_authenticated/transcription': typeof AuthenticatedTranscriptionRoute
+  '/_authenticated/variants': typeof AuthenticatedVariantsRoute
   '/_authenticated/visualization': typeof AuthenticatedVisualizationRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/mutation'
     | '/transcription'
+    | '/variants'
     | '/visualization'
     | '/errors/$error'
     | '/settings/account'
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/mutation'
     | '/transcription'
+    | '/variants'
     | '/visualization'
     | '/'
     | '/errors/$error'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/_authenticated/history'
     | '/_authenticated/mutation'
     | '/_authenticated/transcription'
+    | '/_authenticated/variants'
     | '/_authenticated/visualization'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
@@ -496,6 +508,13 @@ declare module '@tanstack/react-router' {
       path: '/visualization'
       fullPath: '/visualization'
       preLoaderRoute: typeof AuthenticatedVisualizationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/variants': {
+      id: '/_authenticated/variants'
+      path: '/variants'
+      fullPath: '/variants'
+      preLoaderRoute: typeof AuthenticatedVariantsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/transcription': {
@@ -755,6 +774,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedMutationRoute: typeof AuthenticatedMutationRoute
   AuthenticatedTranscriptionRoute: typeof AuthenticatedTranscriptionRoute
+  AuthenticatedVariantsRoute: typeof AuthenticatedVariantsRoute
   AuthenticatedVisualizationRoute: typeof AuthenticatedVisualizationRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
@@ -772,6 +792,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedMutationRoute: AuthenticatedMutationRoute,
   AuthenticatedTranscriptionRoute: AuthenticatedTranscriptionRoute,
+  AuthenticatedVariantsRoute: AuthenticatedVariantsRoute,
   AuthenticatedVisualizationRoute: AuthenticatedVisualizationRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
