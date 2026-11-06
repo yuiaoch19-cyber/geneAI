@@ -168,3 +168,64 @@ class ComparisonPage(BaseModel):
     page: int
     page_size: int
     pages: int
+
+
+class TranscribeRequest(BaseModel):
+    sequence: str = Field(min_length=1, description="DNA 序列（编码链或模板链）")
+    strand: Literal["coding", "template"] = Field(
+        default="coding", description="输入序列是哪条链"
+    )
+    input_direction: Literal["5to3", "3to5"] = Field(
+        default="5to3", description="输入序列的方向"
+    )
+
+
+class TranscribeOut(BaseModel):
+    sequence: str
+    coding_sequence: str
+    template_sequence: str
+    rna: str
+    input_strand: str
+    input_direction: str
+    coding_direction: str
+    template_direction: str
+    rna_direction: str
+    length: int
+    note: str
+
+
+class TranslateRequest(BaseModel):
+    sequence: str = Field(min_length=1, description="DNA 序列（编码链或模板链）")
+    strand: Literal["coding", "template"] = Field(default="coding")
+    input_direction: Literal["5to3", "3to5"] = Field(default="5to3")
+    frame: int = Field(default=1, ge=1, le=3, description="阅读框 1、2 或 3")
+    stop_at_stop: bool = Field(default=True, description="遇到终止密码子是否停止")
+
+
+class CodonOut(BaseModel):
+    index: int
+    rna: str
+    amino_acid: str
+    three_letter: str
+    start: int
+    end: int
+    is_stop: bool
+    is_start: bool
+    ambiguous: bool
+
+
+class TranslateOut(BaseModel):
+    coding_sequence: str
+    template_sequence: str
+    template_direction: str
+    rna: str
+    frame: int
+    protein: str
+    three_letters: list[str]
+    codons: list[CodonOut]
+    start_codon: str | None
+    stop_codon: str | None
+    stopped_at: int | None
+    ignored_bases: int
+    ambiguous_codons: int
+    warnings: list[str]

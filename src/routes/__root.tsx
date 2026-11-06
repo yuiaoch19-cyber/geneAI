@@ -15,7 +15,7 @@ export const Route = createRootRouteWithContext<{
       <>
         <NavigationProgress />
         <Outlet />
-        <Toaster duration={5000} />
+        <Toaster duration={5000} mobileOffset={{ bottom: 96 }} />
         {import.meta.env.MODE === 'development' && (
           <>
             <ReactQueryDevtools buttonPosition='bottom-left' />

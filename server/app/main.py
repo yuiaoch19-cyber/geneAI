@@ -20,7 +20,7 @@ from .errors import (
     http_error_handler,
     validation_error_handler,
 )
-from .routers import analyze, comparisons, history, stats
+from .routers import analyze, central_dogma, comparisons, history, stats
 
 
 @asynccontextmanager
@@ -44,6 +44,7 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.add_exception_handler(StarletteHTTPException, http_error_handler)
 
 app.include_router(analyze.router, prefix="/api")
+app.include_router(central_dogma.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
 app.include_router(comparisons.router, prefix="/api")
 app.include_router(comparisons.preview_router, prefix="/api")

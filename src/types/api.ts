@@ -125,3 +125,49 @@ export interface ComparisonPage {
   pageSize: number
   pages: number
 }
+
+export type DnaStrand = 'coding' | 'template'
+export type SequenceDirection = '5to3' | '3to5'
+
+export interface TranscriptionResult {
+  sequence: string
+  codingSequence: string
+  templateSequence: string
+  rna: string
+  inputStrand: DnaStrand
+  inputDirection: SequenceDirection
+  codingDirection: string
+  templateDirection: string
+  rnaDirection: string
+  length: number
+  note: string
+}
+
+export interface CodonResult {
+  index: number
+  rna: string
+  aminoAcid: string
+  threeLetter: string
+  start: number
+  end: number
+  isStop: boolean
+  isStart: boolean
+  ambiguous: boolean
+}
+
+export interface TranslationResult {
+  codingSequence: string
+  templateSequence: string
+  templateDirection: string
+  rna: string
+  frame: number
+  protein: string
+  threeLetters: string[]
+  codons: CodonResult[]
+  startCodon: string | null
+  stopCodon: string | null
+  stoppedAt: number | null
+  ignoredBases: number
+  ambiguousCodons: number
+  warnings: string[]
+}

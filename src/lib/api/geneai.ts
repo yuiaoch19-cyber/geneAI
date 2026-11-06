@@ -7,9 +7,14 @@ import type {
   ComparisonRecord,
   ComparisonResult,
   ComparisonScoring,
+  CodonResult,
+  DnaStrand,
   GcWindows,
+  SequenceDirection,
   SequenceDifference,
   StatsOverview,
+  TranscriptionResult,
+  TranslationResult,
 } from '@/types/api'
 import { api } from './client'
 
@@ -334,4 +339,115 @@ export async function deleteComparison(id: number): Promise<void> {
 export async function getComparison(id: number): Promise<ComparisonRecord> {
   const raw = await api.get<RawComparison>(`/comparisons/${id}`)
   return toComparisonRecord(raw)
+}
+
+interface RawTranscription {
+  sequence: string
+  coding_sequence: string
+  template_sequence: string
+  rna: string
+  input_strand: DnaStrand
+  input_direction: SequenceDirection
+  coding_direction: string
+  template_direction: string
+  rna_direction: string
+  length: number
+  note: string
+}
+
+interface RawCodon {
+  index: number
+  rna: string
+  amino_acid: string
+  three_letter: string
+  start: number
+  end: number
+  is_stop: boolean
+  is_start: boolean
+  ambiguous: boolean
+}
+
+interface RawTranslation {
+  coding_sequence: string
+  template_sequence: string
+  template_direction: string
+  rna: string
+  frame: number
+  protein: string
+  three_letters: string[]
+  codons: RawCodon[]
+  start_codon: string | null
+  stop_codon: string | null
+  stopped_at: number | null
+  ignored_bases: number
+  ambiguous_codons: number
+  warnings: string[]
+}
+
+export interface CentralDogmaInput {
+  sequence: string
+  strand?: DnaStrand
+  inputDirection?: SequenceDirection
+  frame?: number
+}
+
+export async function transcribeSequence(
+  input: CentralDogmaInput
+): Promise<TranscriptionResult> {
+  const raw = await api.post<RawTranscription>('/transcribe', {
+    sequence: input.sequence,
+    strand: input.strand ?? 'coding',
+    input_direction: input.inputDirection ?? '5to3',
+  })
+  return {
+    sequence: raw.sequence,
+    codingSequence: raw.coding_sequence,
+    templateSequence: raw.template_sequence,
+    rna: raw.rna,
+    inputStrand: raw.input_strand,
+    inputDirection: raw.input_direction,
+    codingDirection: raw.coding_direction,
+    templateDirection: raw.template_direction,
+    rnaDirection: raw.rna_direction,
+    length: raw.length,
+    note: raw.note,
+  }
+}
+
+export async function translateSequence(
+  input: CentralDogmaInput
+): Promise<TranslationResult> {
+  const raw = await api.post<RawTranslation>('/translate', {
+    sequence: input.sequence,
+    strand: input.strand ?? 'coding',
+    input_direction: input.inputDirection ?? '5to3',
+    frame: input.frame ?? 1,
+  })
+  const codons: CodonResult[] = raw.codons.map((codon) => ({
+    index: codon.index,
+    rna: codon.rna,
+    aminoAcid: codon.amino_acid,
+    threeLetter: codon.three_letter,
+    start: codon.start,
+    end: codon.end,
+    isStop: codon.is_stop,
+    isStart: codon.is_start,
+    ambiguous: codon.ambiguous,
+  }))
+  return {
+    codingSequence: raw.coding_sequence,
+    templateSequence: raw.template_sequence,
+    templateDirection: raw.template_direction,
+    rna: raw.rna,
+    frame: raw.frame,
+    protein: raw.protein,
+    threeLetters: raw.three_letters,
+    codons,
+    startCodon: raw.start_codon,
+    stopCodon: raw.stop_codon,
+    stoppedAt: raw.stopped_at,
+    ignoredBases: raw.ignored_bases,
+    ambiguousCodons: raw.ambiguous_codons,
+    warnings: raw.warnings,
+  }
 }

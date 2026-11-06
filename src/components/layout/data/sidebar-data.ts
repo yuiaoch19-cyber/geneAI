@@ -5,6 +5,7 @@ import {
   History,
   LayoutDashboard,
   Settings,
+  Workflow,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -34,6 +35,11 @@ export const sidebarData: SidebarData = {
           title: 'DNA 序列分析',
           url: '/analysis',
           icon: Dna,
+        },
+        {
+          title: '转录与翻译',
+          url: '/transcription',
+          icon: Workflow,
         },
         {
           title: '序列比对',
