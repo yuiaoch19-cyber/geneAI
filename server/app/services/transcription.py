@@ -17,6 +17,24 @@ from .sequence_utils import clean_dna
 _COMPLEMENT = str.maketrans("ATGCN", "TACGN")
 
 
+def coding_sequence(
+    sequence: str, strand: str = "coding", input_direction: str = "5to3"
+) -> str:
+    """把输入序列转换为编码链 5′→3′ 方向，供翻译与突变分析使用。"""
+    dna = clean_dna(sequence)
+    if strand not in {"coding", "template"}:
+        raise ValueError("strand 必须是 coding 或 template")
+    if input_direction not in {"5to3", "3to5"}:
+        raise ValueError("input_direction 必须是 5to3 或 3to5")
+    if strand == "coding":
+        if input_direction != "5to3":
+            raise ValueError("编码链必须按 5′→3′ 方向输入")
+        return dna
+    if input_direction == "5to3":
+        return reverse_complement(dna)
+    return complement(dna)
+
+
 def complement(sequence: str) -> str:
     return sequence.translate(_COMPLEMENT)
 

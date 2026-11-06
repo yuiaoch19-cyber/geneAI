@@ -229,3 +229,64 @@ class TranslateOut(BaseModel):
     ignored_bases: int
     ambiguous_codons: int
     warnings: list[str]
+class MutateRequest(BaseModel):
+    sequence: str = Field(min_length=1, description="原始 DNA 序列")
+    mutation_type: Literal["substitution", "insertion", "deletion"]
+    position: int = Field(ge=0, description="1-based 坐标；插入表示第 N 位之后")
+    alt: str = Field(default="", description="替换/插入的碱基")
+    ref: str = Field(default="", description="替换/缺失的参考碱基")
+    length: int | None = Field(default=None, ge=1, description="缺失长度，默认 1")
+    frame: int = Field(default=1, ge=1, le=3)
+    strand: Literal["coding", "template"] = "coding"
+    input_direction: Literal["5to3", "3to5"] = "5to3"
+
+
+class MutationAppliedOut(BaseModel):
+    type: str
+    position: int
+    ref: str
+    alt: str
+    deleted_sequence: str
+    inserted_sequence: str
+    length_delta: int
+    coordinate_rule: str
+
+
+class ProteinChangeOut(BaseModel):
+    type: Literal["equal", "substitution", "insertion", "deletion"]
+    original_start: int
+    original_end: int
+    mutated_start: int
+    mutated_end: int
+    original: str
+    mutated: str
+
+
+class AminoAcidChangeOut(BaseModel):
+    index: int
+    original: str
+    mutated: str
+
+
+class MutateOut(BaseModel):
+    original_sequence: str
+    mutated_sequence: str
+    mutation: MutationAppliedOut
+    original_rna: str
+    mutated_rna: str
+    frame: int
+    strand: str
+    input_direction: str
+    original_protein: str
+    mutated_protein: str
+    protein_changes: list[ProteinChangeOut]
+    consequence: str
+    label: str
+    is_premature_stop: bool
+    original_protein_length: int
+    mutated_protein_length: int
+    protein_length_delta: int
+    length_delta: int
+    affected_codon: int | None
+    changed_amino_acids: list[AminoAcidChangeOut]
+    note: str

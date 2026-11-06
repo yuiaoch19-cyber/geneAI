@@ -171,3 +171,64 @@ export interface TranslationResult {
   ambiguousCodons: number
   warnings: string[]
 }
+
+export type MutationType = 'substitution' | 'insertion' | 'deletion'
+export type Consequence =
+  | 'synonymous'
+  | 'missense'
+  | 'nonsense'
+  | 'frameshift'
+  | 'in-frame indel'
+  | 'stop_lost'
+  | 'no_protein'
+
+export interface MutationApplied {
+  type: MutationType
+  position: number
+  ref: string
+  alt: string
+  deletedSequence: string
+  insertedSequence: string
+  lengthDelta: number
+  coordinateRule: string
+}
+
+export interface ProteinChange {
+  type: 'equal' | 'substitution' | 'insertion' | 'deletion'
+  originalStart: number
+  originalEnd: number
+  mutatedStart: number
+  mutatedEnd: number
+  original: string
+  mutated: string
+}
+
+export interface AminoAcidChange {
+  index: number
+  original: string
+  mutated: string
+}
+
+export interface MutationAnalysis {
+  originalSequence: string
+  mutatedSequence: string
+  mutation: MutationApplied
+  originalRna: string
+  mutatedRna: string
+  frame: number
+  strand: DnaStrand
+  inputDirection: SequenceDirection
+  originalProtein: string
+  mutatedProtein: string
+  proteinChanges: ProteinChange[]
+  consequence: Consequence
+  label: string
+  isPrematureStop: boolean
+  originalProteinLength: number
+  mutatedProteinLength: number
+  proteinLengthDelta: number
+  lengthDelta: number
+  affectedCodon: number | null
+  changedAminoAcids: AminoAcidChange[]
+  note: string
+}

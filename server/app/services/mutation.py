@@ -11,7 +11,10 @@
 
 from __future__ import annotations
 
+from difflib import SequenceMatcher
+
 from .sequence_utils import clean_dna
+from .transcription import coding_sequence
 from .translation import translate_rna
 
 CONSEQUENCE_LABELS = {
@@ -108,23 +111,55 @@ def _translate_dna_sequence(sequence: str, frame: int) -> str:
     return translate_rna(rna, frame=frame, stop_at_stop=False)["protein"]
 
 
+def _protein_changes(original: str, mutated: str) -> list[dict]:
+    """按字符差异切分蛋白，供前端做逐位对照与高亮。"""
+    matcher = SequenceMatcher(None, original, mutated, autojunk=False)
+    label = {
+        "equal": "equal",
+        "replace": "substitution",
+        "insert": "insertion",
+        "delete": "deletion",
+    }
+    return [
+        {
+            "type": label[tag],
+            "original_start": i1,
+            "original_end": i2,
+            "mutated_start": j1,
+            "mutated_end": j2,
+            "original": original[i1:i2],
+            "mutated": mutated[j1:j2],
+        }
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes()
+    ]
+
+
+def _aa_length(protein: str) -> int:
+    return len(protein.split("*", 1)[0])
+
+
 def classify_mutation(
     original: str,
     mutated: str,
     frame: int = 1,
     position: int | None = None,
+    strand: str = "coding",
+    input_direction: str = "5to3",
 ) -> dict:
     """比较突变前后的蛋白质，给出序列层面的后果分类。"""
     if frame not in (1, 2, 3):
         raise ValueError("frame 必须是 1、2 或 3")
-    original_sequence = clean_dna(original, field="original")
-    mutated_sequence = clean_dna(mutated, field="mutated")
+    original_sequence = coding_sequence(original, strand, input_direction)
+    mutated_sequence = coding_sequence(mutated, strand, input_direction)
 
     original_protein = _translate_dna_sequence(original_sequence, frame)
     mutated_protein = _translate_dna_sequence(mutated_sequence, frame)
     original_stop = original_protein.find("*")
     mutated_stop = mutated_protein.find("*")
     length_delta = len(mutated_sequence) - len(original_sequence)
+    premature_stop = mutated_stop != -1 and (
+        original_stop == -1 or mutated_stop < original_stop
+    )
 
     if not original_protein or not mutated_protein:
         consequence = "no_protein"
@@ -136,7 +171,7 @@ def classify_mutation(
         consequence = "stop_lost"
     elif length_delta != 0:
         consequence = "in-frame indel"
-    elif mutated_stop != -1 and (original_stop == -1 or mutated_stop < original_stop):
+    elif premature_stop:
         consequence = "nonsense"
     else:
         consequence = "missense"
@@ -153,13 +188,23 @@ def classify_mutation(
             raise ValueError("position 必须是正整数")
         affected_codon = (position - 1) // 3 + 1
 
+    original_aa_length = _aa_length(original_protein)
+    mutated_aa_length = _aa_length(mutated_protein)
+
     return {
         "consequence": consequence,
         "label": CONSEQUENCE_LABELS[consequence],
         "original_protein": original_protein,
         "mutated_protein": mutated_protein,
+        "protein_changes": _protein_changes(original_protein, mutated_protein),
+        "is_premature_stop": premature_stop,
+        "original_protein_length": original_aa_length,
+        "mutated_protein_length": mutated_aa_length,
+        "protein_length_delta": mutated_aa_length - original_aa_length,
         "length_delta": length_delta,
         "frame": frame,
+        "strand": strand,
+        "input_direction": input_direction,
         "original_stop_index": original_stop if original_stop != -1 else None,
         "mutated_stop_index": mutated_stop if mutated_stop != -1 else None,
         "changed_amino_acids": changed,

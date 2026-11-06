@@ -1,6 +1,7 @@
 import {
   ChartSpline,
   Dna,
+  FlaskConical,
   GitCompareArrows,
   History,
   LayoutDashboard,
@@ -40,6 +41,11 @@ export const sidebarData: SidebarData = {
           title: '转录与翻译',
           url: '/transcription',
           icon: Workflow,
+        },
+        {
+          title: '突变模拟',
+          url: '/mutation',
+          icon: FlaskConical,
         },
         {
           title: '序列比对',

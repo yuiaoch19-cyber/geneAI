@@ -10,6 +10,9 @@ import type {
   CodonResult,
   DnaStrand,
   GcWindows,
+  MutationAnalysis,
+  MutationType,
+  ProteinChange,
   SequenceDirection,
   SequenceDifference,
   StatsOverview,
@@ -449,5 +452,118 @@ export async function translateSequence(
     ignoredBases: raw.ignored_bases,
     ambiguousCodons: raw.ambiguous_codons,
     warnings: raw.warnings,
+  }
+}
+
+interface RawMutationApplied {
+  type: MutationType
+  position: number
+  ref: string
+  alt: string
+  deleted_sequence: string
+  inserted_sequence: string
+  length_delta: number
+  coordinate_rule: string
+}
+
+interface RawProteinChange {
+  type: ProteinChange['type']
+  original_start: number
+  original_end: number
+  mutated_start: number
+  mutated_end: number
+  original: string
+  mutated: string
+}
+
+interface RawMutationAnalysis {
+  original_sequence: string
+  mutated_sequence: string
+  mutation: RawMutationApplied
+  original_rna: string
+  mutated_rna: string
+  frame: number
+  strand: DnaStrand
+  input_direction: SequenceDirection
+  original_protein: string
+  mutated_protein: string
+  protein_changes: RawProteinChange[]
+  consequence: MutationAnalysis['consequence']
+  label: string
+  is_premature_stop: boolean
+  original_protein_length: number
+  mutated_protein_length: number
+  protein_length_delta: number
+  length_delta: number
+  affected_codon: number | null
+  changed_amino_acids: { index: number; original: string; mutated: string }[]
+  note: string
+}
+
+export interface MutateInput {
+  sequence: string
+  mutationType: MutationType
+  position: number
+  alt?: string
+  ref?: string
+  length?: number | null
+  frame?: number
+  strand?: DnaStrand
+  inputDirection?: SequenceDirection
+}
+
+export async function mutateSequence(
+  input: MutateInput
+): Promise<MutationAnalysis> {
+  const raw = await api.post<RawMutationAnalysis>('/mutate', {
+    sequence: input.sequence,
+    mutation_type: input.mutationType,
+    position: input.position,
+    alt: input.alt ?? '',
+    ref: input.ref ?? '',
+    length: input.length ?? null,
+    frame: input.frame ?? 1,
+    strand: input.strand ?? 'coding',
+    input_direction: input.inputDirection ?? '5to3',
+  })
+  return {
+    originalSequence: raw.original_sequence,
+    mutatedSequence: raw.mutated_sequence,
+    mutation: {
+      type: raw.mutation.type,
+      position: raw.mutation.position,
+      ref: raw.mutation.ref,
+      alt: raw.mutation.alt,
+      deletedSequence: raw.mutation.deleted_sequence,
+      insertedSequence: raw.mutation.inserted_sequence,
+      lengthDelta: raw.mutation.length_delta,
+      coordinateRule: raw.mutation.coordinate_rule,
+    },
+    originalRna: raw.original_rna,
+    mutatedRna: raw.mutated_rna,
+    frame: raw.frame,
+    strand: raw.strand,
+    inputDirection: raw.input_direction,
+    originalProtein: raw.original_protein,
+    mutatedProtein: raw.mutated_protein,
+    proteinChanges: raw.protein_changes.map((change) => ({
+      type: change.type,
+      originalStart: change.original_start,
+      originalEnd: change.original_end,
+      mutatedStart: change.mutated_start,
+      mutatedEnd: change.mutated_end,
+      original: change.original,
+      mutated: change.mutated,
+    })),
+    consequence: raw.consequence,
+    label: raw.label,
+    isPrematureStop: raw.is_premature_stop,
+    originalProteinLength: raw.original_protein_length,
+    mutatedProteinLength: raw.mutated_protein_length,
+    proteinLengthDelta: raw.protein_length_delta,
+    lengthDelta: raw.length_delta,
+    affectedCodon: raw.affected_codon,
+    changedAminoAcids: raw.changed_amino_acids,
+    note: raw.note,
   }
 }

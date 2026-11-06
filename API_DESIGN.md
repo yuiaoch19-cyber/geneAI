@@ -100,12 +100,16 @@ allow_headers = ["*"]
 
 ---
 
-## 2. 接口总览（阶段 6 已实现）
+## 2. 接口总览（已实现，0.8.0）
 
 | 方法   | 路径                           | 说明                     |
 | ------ | ------------------------------ | ------------------------ |
 | GET    | `/api/health`                  | 健康检查与数据库连通性   |
 | POST   | `/api/analyze`                 | 分析 DNA 序列（不写库）  |
+| POST   | `/api/transcribe`              | DNA → RNA 转录           |
+| POST   | `/api/translate`               | DNA → 蛋白质翻译         |
+| POST   | `/api/mutate`                  | 应用突变并预测后果       |
+| POST   | `/api/compare`                 | 双序列全局比对（不写库） |
 | POST   | `/api/upload/fasta`            | 上传并解析单条 FASTA     |
 | POST   | `/api/history`                 | 分析并保存一条历史记录   |
 | GET    | `/api/history`                 | 历史列表（搜索 + 分页）  |
@@ -114,7 +118,6 @@ allow_headers = ["*"]
 | GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据         |
 | GET    | `/api/history/{id}/report`     | 导出 PDF 分析报告        |
 | GET    | `/api/stats/overview`          | Dashboard 聚合统计       |
-| POST   | `/api/compare`                 | 双序列全局比对（不写库） |
 | POST   | `/api/comparisons`             | 比对并保存一条记录       |
 | GET    | `/api/comparisons`             | 比对列表（搜索 + 分页）  |
 | GET    | `/api/comparisons/{id}`        | 比对详情（含对齐与差异） |
@@ -491,7 +494,57 @@ Cache-Control: no-store
 
 ---
 
-## 8. 前端调用映射
+## 8. 中心法则与突变（2.0）
+
+### `POST /api/transcribe`
+
+```json
+{
+  "sequence": "ATGGAACCTTGGTAA",
+  "strand": "coding",
+  "input_direction": "5to3"
+}
+```
+
+`strand` 为 `coding` / `template`，`input_direction` 为 `5to3` / `3to5`；编码链输入必须为 5′→3′。返回 `rna`（统一 5′→3′）、`coding_sequence`、`template_sequence`、`coding_direction`、`template_direction`、`rna_direction`、`length`、`note`。
+
+### `POST /api/translate`
+
+```json
+{
+  "sequence": "ATGGAACCTTGGTAA",
+  "strand": "coding",
+  "input_direction": "5to3",
+  "frame": 1,
+  "stop_at_stop": true
+}
+```
+
+返回 `rna`、`protein`（含 `*` 终止符）、`three_letters`、`codons[]`（`index/rna/amino_acid/three_letter/start/end/is_stop/is_start/ambiguous`）、`start_codon`、`stop_codon`、`stopped_at`、`ignored_bases`、`ambiguous_codons`、`warnings`。
+
+### `POST /api/mutate`
+
+```json
+{
+  "sequence": "ATGGAACCTTGGTAA",
+  "mutation_type": "substitution",
+  "position": 7,
+  "alt": "T",
+  "frame": 1,
+  "strand": "coding",
+  "input_direction": "5to3"
+}
+```
+
+`mutation_type` 为 `substitution` / `insertion` / `deletion`；替换与缺失使用 1-based 起始坐标，插入坐标为「第 N 位之后」，`0` 表示序列开头。缺失可用 `ref` 指定被删片段，或 `length` 指定长度。
+
+响应包含 `original_sequence`、`mutated_sequence`、`mutation`（坐标与规则）、`original_rna` / `mutated_rna`、`original_protein` / `mutated_protein`、`protein_changes[]`、`consequence` / `label`、`is_premature_stop`、蛋白长度与变化、`affected_codon`、`changed_amino_acids[]`、免责 `note`。
+
+非法序列返回 `400 INVALID_SEQUENCE`，坐标/碱基不合法返回 `400 INVALID_MUTATION`，参数类型错误返回 `422 VALIDATION_ERROR`。所有坐标相对于请求中的输入序列。
+
+---
+
+## 9. 前端调用映射
 
 | 页面/功能 | 前端函数                        | 接口                           |
 | --------- | ------------------------------- | ------------------------------ |
@@ -503,6 +556,9 @@ Cache-Control: no-store
 | 删除      | `deleteAnalysis`                | `DELETE /history/{id}`         |
 | 滑窗 GC   | `getGcWindows`                  | `GET /history/{id}/gc-windows` |
 | 比对预览  | `compareSequences`              | `POST /compare`                |
+| 转录演示  | `transcribeSequence`            | `POST /transcribe`             |
+| 翻译演示  | `translateSequence`             | `POST /translate`              |
+| 突变模拟  | `mutateSequence`                | `POST /mutate`                 |
 | 保存比对  | `saveComparison`                | `POST /comparisons`            |
 | 比对列表  | `listComparisons`               | `GET /comparisons`             |
 | 删除比对  | `deleteComparison`              | `DELETE /comparisons/{id}`     |
@@ -514,7 +570,7 @@ Query keys：`['stats','overview']`、`['analysis', id]`。写操作成功后 in
 
 ---
 
-## 9. 测试与调试
+## 10. 测试与调试
 
 ```bash
 # 后端单元 + API 测试
@@ -531,7 +587,7 @@ curl -F "file=@demo.fasta" http://127.0.0.1:8000/api/upload/fasta
 
 ---
 
-## 10. 契约同步
+## 11. 契约同步
 
 1. 先改 `server/app/schemas.py` 与路由。
 2. 同步 `src/types/api.ts` 与 `src/lib/api/geneai.ts`（手写映射，不引入代码生成）。
@@ -540,7 +596,7 @@ curl -F "file=@demo.fasta" http://127.0.0.1:8000/api/upload/fasta
 
 ---
 
-## 11. 非目标
+## 12. 非目标
 
 - 不做 GraphQL、WebSocket/SSE、OAuth、API Key（本地单机课程项目）。
 - 不做批量上传、软删除、回收站。
