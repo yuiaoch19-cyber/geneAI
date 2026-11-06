@@ -30,7 +30,7 @@ export function AppSidebar() {
       <SidebarFooter className='p-0 pb-3'>
         <SidebarPromo />
         <p className='px-4 text-[10px] text-sidebar-foreground/35'>
-          GeneAI v1.0 · 本地运行
+          GeneAI v2.0 · 本地运行
         </p>
       </SidebarFooter>
       <SidebarRail />

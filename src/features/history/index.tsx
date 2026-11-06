@@ -15,6 +15,7 @@ import {
   Dna,
   Download,
   Eye,
+  FileSpreadsheet,
   History as HistoryIcon,
   Loader2,
   Plus,
@@ -25,6 +26,7 @@ import {
 import { toast } from 'sonner'
 import {
   deleteAnalysis,
+  downloadAnalysisCsv,
   downloadAnalysisReport,
   getAnalysis,
   listAnalyses,
@@ -104,6 +106,7 @@ export function AnalysisHistoryPage() {
   const [detailId, setDetailId] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AnalysisRecord | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
+  const [downloadingCsvId, setDownloadingCsvId] = useState<number | null>(null)
 
   const hasFilters = Boolean(keyword.trim() || dateFrom || dateTo)
 
@@ -162,6 +165,26 @@ export function AnalysisHistoryPage() {
     }
   }
 
+  async function handleDownloadCsv(record: AnalysisRecord) {
+    setDownloadingCsvId(record.id)
+    try {
+      const blob = await downloadAnalysisCsv(record.id)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `GeneAI-${safeFileName(record.name)}.csv`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+      toast.success(`已导出「${record.name}」的 CSV`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'CSV 导出失败')
+    } finally {
+      setDownloadingCsvId(null)
+    }
+  }
+
   function resetFilters() {
     setKeyword('')
     setDateFrom('')
@@ -182,7 +205,7 @@ export function AnalysisHistoryPage() {
         <PageHeader
           eyebrow='History'
           title='历史记录'
-          description='浏览保存在本机的序列分析记录，支持搜索、按日期筛选、查看详情、导出 PDF 报告与删除。'
+          description='浏览保存在本机的序列分析记录，支持搜索、按日期筛选、查看详情、导出 PDF / CSV 报告与删除。'
           actions={
             <Button asChild size='sm'>
               <Link to='/analysis'>
@@ -294,7 +317,7 @@ export function AnalysisHistoryPage() {
                 description={
                   hasFilters
                     ? '尝试调整搜索关键词或日期范围，也可以清除筛选查看全部记录。'
-                    : '完成一次序列分析并保存后，记录会自动出现在这里，并可导出 PDF 报告。'
+                    : '完成一次序列分析并保存后，记录会自动出现在这里，并可导出 PDF / CSV 报告。'
                 }
                 action={
                   hasFilters ? (
@@ -381,6 +404,21 @@ export function AnalysisHistoryPage() {
                             onClick={() => setDetailId(record.id)}
                           >
                             <Eye className='size-4' />
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='size-8'
+                            title='导出 CSV'
+                            aria-label={`导出 ${record.name} 的 CSV`}
+                            disabled={downloadingCsvId === record.id}
+                            onClick={() => void handleDownloadCsv(record)}
+                          >
+                            {downloadingCsvId === record.id ? (
+                              <Loader2 className='size-4 animate-spin' />
+                            ) : (
+                              <FileSpreadsheet className='size-4' />
+                            )}
                           </Button>
                           <Button
                             variant='ghost'
@@ -553,6 +591,20 @@ export function AnalysisHistoryPage() {
                     <Download className='size-4' />
                   )}
                   导出 PDF 报告
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='gap-1.5'
+                  disabled={downloadingCsvId === detail.id}
+                  onClick={() => void handleDownloadCsv(detail)}
+                >
+                  {downloadingCsvId === detail.id ? (
+                    <Loader2 className='size-4 animate-spin' />
+                  ) : (
+                    <FileSpreadsheet className='size-4' />
+                  )}
+                  导出 CSV
                 </Button>
               </div>
             </div>

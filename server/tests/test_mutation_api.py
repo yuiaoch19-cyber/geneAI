@@ -48,7 +48,7 @@ def test_nonsense_premature_stop(client):
     assert response.status_code == 200
     assert body["consequence"] == "nonsense"
     assert body["is_premature_stop"] is True
-    assert body["mutated_protein"] == "MEP**"
+    assert body["mutated_protein"] == "MEP*"
     assert body["mutated_protein_length"] == 3
 
 

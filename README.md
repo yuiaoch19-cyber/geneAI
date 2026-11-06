@@ -42,8 +42,8 @@
 │  └─ styles/               theme.css 设计令牌
 ├─ server/                  后端
 │  ├─ app/
-│  │  ├─ routers/           analyze / history / comparisons / stats / central_dogma / mutation / map / variants
-│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、dates.py、genetic_code.py、transcription.py、translation.py、orf.py、mutation.py、map_features.py、clinvar.py
+│  │  ├─ routers/           analyze / history / comparisons / stats / central_dogma / mutation / orfs / map / variants
+│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、csv_export.py、dates.py、genetic_code.py、transcription.py、translation.py、orf.py、mutation.py、map_features.py、clinvar.py
 │  │  ├─ models.py          AnalysisRecord / Comparison / Meta
 │  │  ├─ schemas.py         请求与响应模型
 │  │  └─ main.py            FastAPI 入口
@@ -52,7 +52,11 @@
 │  └─ .env.example
 ├─ docs/screenshots/        各阶段验收截图与示例报告
 ├─ docs/audit/              阶段 9 优化后页面截图（audit-before 为优化前）
-├─ scripts/                 验收脚本（42 项接口断言 + 13 步业务流程）
+├─ docs/FINAL_ACCEPTANCE.md 最终验收清单与测试报告
+├─ docs/PRESENTATION.md     答辩讲稿
+├─ docs/GeneAI-2.0-答辩演示.pptx 答辩演示文稿
+├─ samples/                 手动验收用 FASTA 样本
+├─ scripts/                 验收脚本（42 项接口断言 + 13 步业务流程）与演示稿生成脚本
 ├─ API_DESIGN.md            接口说明
 ├─ DATABASE_DESIGN.md       数据库设计
 ├─ TEST_PLAN.md             测试计划
@@ -123,7 +127,7 @@ pnpm test:e2e     # 13 步业务流程（Playwright + 系统 Edge），并输出
 
 # 后端单元与接口测试
 cd server
-.venv\Scripts\python.exe -m pytest tests -q   # 159 个用例（DNA/转录/翻译/ORF/突变/ClinVar/比对/地图/API/报告）
+.venv\Scripts\python.exe -m pytest tests -q   # 164 个用例（DNA/转录/翻译/ORF/突变/ClinVar/比对/地图/API/报告）
 ```
 
 ## 数据库初始化
@@ -158,7 +162,7 @@ rm server/geneai.db server/geneai.db-wal server/geneai.db-shm   # Windows 用 de
 
 ## API
 
-全部接口已实现（版本 0.8.0）：
+全部接口已实现（版本 2.0.0）：
 
 ```
 GET    /api/health
@@ -166,6 +170,7 @@ POST   /api/analyze                              {sequence, sequence_name?}
 POST   /api/transcribe                            {sequence, strand, input_direction}
 POST   /api/translate                             {sequence, strand, input_direction, frame, stop_at_stop}
 POST   /api/mutate                                {sequence, mutation_type, position, alt?, ref?, length?, frame, strand, input_direction}
+POST   /api/orfs                                  {sequence, min_length_aa, include_nested, require_stop}
 POST   /api/map                                    {sequence, window, step, min_orf_aa, enzymes, motifs, mutation?}
 GET    /api/variants/search?q=&query_type=&limit=  ClinVar 查询（基因/rs/VCV/ID）
 GET    /api/variants/{variation_id}               ClinVar 单条详情
@@ -176,6 +181,7 @@ GET    /api/history/{id}
 DELETE /api/history/{id}
 GET    /api/history/{id}/gc-windows?window=&step=
 GET    /api/history/{id}/report                  返回 application/pdf
+GET    /api/history/{id}/csv                     返回 text/csv（UTF-8 BOM）
 GET    /api/stats/overview
 POST   /api/compare                               只比对、不落库
 POST   /api/comparisons

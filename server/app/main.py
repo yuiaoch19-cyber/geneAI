@@ -27,6 +27,7 @@ from .routers import (
     history,
     map as map_router,
     mutation,
+    orfs,
     stats,
     variants,
 )
@@ -56,6 +57,7 @@ app.include_router(analyze.router, prefix="/api")
 app.include_router(central_dogma.router, prefix="/api")
 app.include_router(map_router.router, prefix="/api")
 app.include_router(mutation.router, prefix="/api")
+app.include_router(orfs.router, prefix="/api")
 app.include_router(variants.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
 app.include_router(comparisons.router, prefix="/api")

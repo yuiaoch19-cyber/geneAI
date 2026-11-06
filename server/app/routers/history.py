@@ -18,6 +18,7 @@ from ..schemas import (
     HistoryRecord,
 )
 from ..services import dna
+from ..services.csv_export import build_analysis_csv
 from ..services.dates import local_day_start_utc
 from ..services.report import build_analysis_report
 
@@ -166,6 +167,26 @@ def download_report(record_id: int, db: Session = Depends(get_db)) -> Response:
         "Cache-Control": "no-store",
     }
     return Response(content=pdf, media_type="application/pdf", headers=headers)
+
+
+@router.get("/{record_id}/csv")
+def download_csv(record_id: int, db: Session = Depends(get_db)) -> Response:
+    record = _get_or_404(record_id, db)
+    content = build_analysis_csv(record)
+
+    ascii_name = f"GeneAI-analysis-{record.id}.csv"
+    utf8_name = quote(f"GeneAI-分析结果-{record.id}.csv")
+    headers = {
+        "Content-Disposition": (
+            f'attachment; filename="{ascii_name}"; filename*=UTF-8\'\'{utf8_name}'
+        ),
+        "Cache-Control": "no-store",
+    }
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers=headers,
+    )
 
 
 @router.delete("/{record_id}", status_code=204)

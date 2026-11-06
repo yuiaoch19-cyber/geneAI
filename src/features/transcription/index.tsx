@@ -40,6 +40,7 @@ import { MobilePlayerBar, PlayerControls } from './components/player-controls'
 import { TranscriptionStage } from './components/transcription-stage'
 import { TranslationStage } from './components/translation-stage'
 import { useCentralDogmaPlayer } from './use-player'
+import { TEACHING_SAMPLES } from '@/lib/demo-sequences'
 
 const EXAMPLE = 'ATGGAACCTTGGTAA'
 
@@ -117,16 +118,18 @@ export function TranscriptionPage() {
     }
   }
 
-  function loadExample() {
-    setName('教学示例')
-    setRaw(EXAMPLE)
+  function loadSample(sampleId: string) {
+    const sample = TEACHING_SAMPLES.find((item) => item.id === sampleId)
+    if (!sample) return
+    setName(sample.label)
+    setRaw(sample.sequence)
     setStrand('coding')
     setDirection('5to3')
     setFrame('1')
     setTranscription(null)
     setTranslation(null)
     setError(null)
-    toast.success('已载入教学示例')
+    toast.success(`已载入${sample.label}`)
   }
 
   function clearAll() {
@@ -271,15 +274,19 @@ export function TranscriptionPage() {
                     <Play className='size-4' />
                     {loading ? '计算中…' : '开始演示'}
                   </Button>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={loadExample}
-                    className='gap-2'
-                  >
-                    <FlaskConical className='size-4' />
-                    教学示例
-                  </Button>
+                  <Select onValueChange={loadSample}>
+                    <SelectTrigger className='h-9 w-[148px] gap-1.5 text-xs'>
+                      <FlaskConical className='size-3.5' />
+                      <SelectValue placeholder='教学示例 A / B / C' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TEACHING_SAMPLES.map((sample) => (
+                        <SelectItem key={sample.id} value={sample.id}>
+                          {sample.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button type='button' variant='ghost' onClick={clearAll}>
                     清空
                   </Button>

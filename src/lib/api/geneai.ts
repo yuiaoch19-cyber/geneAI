@@ -205,6 +205,10 @@ export async function downloadAnalysisReport(id: number): Promise<Blob> {
   return api.download(`/history/${id}/report`)
 }
 
+export async function downloadAnalysisCsv(id: number): Promise<Blob> {
+  return api.download(`/history/${id}/csv`)
+}
+
 export async function getStatsOverview(): Promise<StatsOverview> {
   const raw = await api.get<RawStats>('/stats/overview')
   return {

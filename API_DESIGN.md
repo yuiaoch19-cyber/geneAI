@@ -1,13 +1,13 @@
 # GeneAI API 设计
 
-| 项目 | 内容                                                             |
-| ---- | ---------------------------------------------------------------- |
-| 风格 | REST + JSON                                                      |
-| 基址 | `http://127.0.0.1:8000/api`（开发期由 Vite 代理 `/api`）         |
-| 版本 | `0.8.0`（阶段 8：分析 / FASTA / 历史 / 比对 / PDF 报告均已实现） |
-| 编码 | UTF-8；JSON 为 `application/json`，上传为 `multipart/form-data`  |
-| 时间 | UTC ISO 8601，输出以 `Z` 结尾，如 `2026-11-05T00:09:00Z`         |
-| 分页 | `page`（1-based）+ `page_size`（1–100），响应带 `total/pages`    |
+| 项目 | 内容                                                                  |
+| ---- | --------------------------------------------------------------------- |
+| 风格 | REST + JSON                                                           |
+| 基址 | `http://127.0.0.1:8000/api`（开发期由 Vite 代理 `/api`）              |
+| 版本 | `2.0.0`（阶段 8 基础 API + 2.0 中心法则 / 突变 / ClinVar / 序列地图） |
+| 编码 | UTF-8；JSON 为 `application/json`，上传为 `multipart/form-data`       |
+| 时间 | UTC ISO 8601，输出以 `Z` 结尾，如 `2026-11-05T00:09:00Z`              |
+| 分页 | `page`（1-based）+ `page_size`（1–100），响应带 `total/pages`         |
 
 > FastAPI 自动生成 `/docs` 与 `/openapi.json`；本文档与实现保持一致。
 
@@ -100,7 +100,7 @@ allow_headers = ["*"]
 
 ---
 
-## 2. 接口总览（已实现，0.8.0）
+## 2. 接口总览（已实现，2.0.0）
 
 | 方法   | 路径                           | 说明                                 |
 | ------ | ------------------------------ | ------------------------------------ |
@@ -109,6 +109,7 @@ allow_headers = ["*"]
 | POST   | `/api/transcribe`              | DNA → RNA 转录                       |
 | POST   | `/api/translate`               | DNA → 蛋白质翻译                     |
 | POST   | `/api/mutate`                  | 应用突变并预测后果                   |
+| POST   | `/api/orfs`                    | 六阅读框 ORF 扫描                    |
 | POST   | `/api/map`                     | 序列地图图层（ORF/GC/酶/motif/突变） |
 | GET    | `/api/variants/search`         | ClinVar 变异查询                     |
 | GET    | `/api/variants/{id}`           | ClinVar 单条详情                     |
@@ -120,6 +121,7 @@ allow_headers = ["*"]
 | DELETE | `/api/history/{id}`            | 删除历史记录                         |
 | GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据                     |
 | GET    | `/api/history/{id}/report`     | 导出 PDF 分析报告                    |
+| GET    | `/api/history/{id}/csv`        | 导出 CSV 分析数据                    |
 | GET    | `/api/stats/overview`          | Dashboard 聚合统计                   |
 | POST   | `/api/comparisons`             | 比对并保存一条记录                   |
 | GET    | `/api/comparisons`             | 比对列表（搜索 + 分页）              |
@@ -138,7 +140,7 @@ allow_headers = ["*"]
 {
   "status": "ok",
   "app": "GeneAI",
-  "version": "0.8.0",
+  "version": "2.0.0",
   "database": "ok"
 }
 ```
@@ -353,6 +355,20 @@ Cache-Control: no-store
 - 中文字体优先使用 Windows `msyh.ttc` / `msyhbd.ttc`，退回 `simhei.ttf`、`simsun.ttc`，最终退回 ReportLab `STSong-Light`。
 - 序列超过 5,000 bp 时仅展示前 5,000 bp 并注明；其余统计仍按完整序列计算。
 - 记录不存在返回 `404 NOT_FOUND`；生成失败或结果异常返回 `500 REPORT_FAILED`。
+
+### 5.7 `GET /api/history/{id}/csv`
+
+按历史记录导出 CSV，字段与 PDF 报告一致，便于在 Excel / pandas 中继续分析。
+
+响应 `200`，`Content-Type: text/csv; charset=utf-8`：
+
+```
+Content-Disposition: attachment; filename="GeneAI-analysis-1.csv"
+```
+
+- 文件以 UTF-8 BOM 开头，Excel 可直接识别中文。
+- 两列结构：`字段,值`；包含名称、编号、分析时间、长度、A/T/G/C/N、GC/AT、来源、算法版本、原始序列、互补链、反向互补链、RNA。
+- 记录不存在返回 `404 NOT_FOUND`。
 
 ---
 
@@ -740,7 +756,54 @@ curl -F "file=@demo.fasta" http://127.0.0.1:8000/api/upload/fasta
 
 ---
 
-## 14. 非目标
+## 14. ORF 扫描（2.0）
+
+### `POST /api/orfs`
+
+```json
+{
+  "sequence": "ATGGAACCTTGGTAA",
+  "min_length_aa": 0,
+  "include_nested": true,
+  "require_stop": true
+}
+```
+
+响应 `200`：
+
+```json
+{
+  "sequence_length": 15,
+  "orfs": [
+    {
+      "strand": "+",
+      "frame": 1,
+      "start": 1,
+      "end": 15,
+      "length_nt": 15,
+      "length_aa": 4,
+      "start_codon": "ATG",
+      "stop_codon": "TAA",
+      "protein": "MEPW",
+      "is_complete": true,
+      "is_potential": true
+    }
+  ],
+  "count": 1,
+  "frames_scanned": 6,
+  "strategy": "仅 ATG 起始、同框终止密码子结束；include_nested=true 时内部 ATG 也各自成 ORF。",
+  "warnings": []
+}
+```
+
+- 六阅读框（正链 3 + 反链 3）；负链坐标换算回正链 1-based 闭区间。
+- `is_potential: true` 表示潜在 ORF，不等同已验证基因。
+- `require_stop=false` 时允许没有终止密码子的 ORF。
+- 非法序列返回 `400 INVALID_SEQUENCE`。
+
+---
+
+## 15. 非目标
 
 - 不做 GraphQL、WebSocket/SSE、OAuth、API Key（本地单机课程项目）。
 - 不做批量上传、软删除、回收站。

@@ -231,3 +231,29 @@ def test_history_report_missing_record(client):
     response = client.get("/api/history/9999/report")
     assert response.status_code == 404
     assert response.json()["code"] == "NOT_FOUND"
+
+
+def test_history_csv_export(client):
+    created = client.post(
+        "/api/history",
+        json={
+            "sequence_name": "CSV 样本",
+            "original_sequence": "ATGGAA",
+        },
+    ).json()
+
+    response = client.get(f"/api/history/{created['id']}/csv")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment" in response.headers["content-disposition"]
+    text = response.content.decode("utf-8-sig")
+    assert "CSV 样本" in text
+    assert "ATGGAA" in text
+    assert "AUGGAA" in text
+    assert "GC 含量 (%)" in text
+
+
+def test_history_csv_missing_record(client):
+    response = client.get("/api/history/9999/csv")
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"

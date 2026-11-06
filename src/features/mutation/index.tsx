@@ -70,6 +70,20 @@ type Preset = {
 
 const PRESETS: Preset[] = [
   {
+    label: '示例 B · 无义',
+    type: 'substitution',
+    position: 4,
+    alt: 'T',
+    description: 'ATG GAA → ATG TAA，第二密码子提前终止',
+  },
+  {
+    label: '示例 C · 移码',
+    type: 'insertion',
+    position: 3,
+    alt: 'A',
+    description: 'ATG 后插入 A，GAA → AGA，阅读框改变',
+  },
+  {
     label: '同义突变',
     type: 'substitution',
     position: 6,

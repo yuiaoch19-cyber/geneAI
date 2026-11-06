@@ -429,3 +429,19 @@ class MapOut(BaseModel):
     mutation: MapMutationOut | None
     warnings: list[str]
     coordinate_rule: str
+
+
+class OrfRequest(BaseModel):
+    sequence: str = Field(min_length=1)
+    min_length_aa: int = Field(default=0, ge=0)
+    include_nested: bool = True
+    require_stop: bool = True
+
+
+class OrfResultOut(BaseModel):
+    sequence_length: int
+    orfs: list[MapOrfOut]
+    count: int
+    frames_scanned: int
+    strategy: str
+    warnings: list[str]

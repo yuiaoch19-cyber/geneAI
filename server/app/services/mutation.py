@@ -176,9 +176,17 @@ def classify_mutation(
     else:
         consequence = "missense"
 
+    # 提前终止时，核糖体在第一个终止密码子处停止；
+    # 为了展示真实的翻译产物，界面只显示到这个终止密码子为止。
+    display_mutated_protein = mutated_protein
+    if premature_stop and mutated_stop != -1:
+        display_mutated_protein = mutated_protein[: mutated_stop + 1]
+
     changed = [
         {"index": index, "original": left, "mutated": right}
-        for index, (left, right) in enumerate(zip(original_protein, mutated_protein))
+        for index, (left, right) in enumerate(
+            zip(original_protein, display_mutated_protein)
+        )
         if left != right
     ]
 
@@ -189,14 +197,14 @@ def classify_mutation(
         affected_codon = (position - 1) // 3 + 1
 
     original_aa_length = _aa_length(original_protein)
-    mutated_aa_length = _aa_length(mutated_protein)
+    mutated_aa_length = _aa_length(display_mutated_protein)
 
     return {
         "consequence": consequence,
         "label": CONSEQUENCE_LABELS[consequence],
         "original_protein": original_protein,
-        "mutated_protein": mutated_protein,
-        "protein_changes": _protein_changes(original_protein, mutated_protein),
+        "mutated_protein": display_mutated_protein,
+        "protein_changes": _protein_changes(original_protein, display_mutated_protein),
         "is_premature_stop": premature_stop,
         "original_protein_length": original_aa_length,
         "mutated_protein_length": mutated_aa_length,
