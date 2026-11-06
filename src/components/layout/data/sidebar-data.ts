@@ -6,6 +6,7 @@ import {
   GitCompareArrows,
   History,
   LayoutDashboard,
+  Map,
   Settings,
   Workflow,
 } from 'lucide-react'
@@ -47,6 +48,11 @@ export const sidebarData: SidebarData = {
           title: '突变模拟',
           url: '/mutation',
           icon: FlaskConical,
+        },
+        {
+          title: 'DNA 序列地图',
+          url: '/map',
+          icon: Map,
         },
         {
           title: '变异数据库',

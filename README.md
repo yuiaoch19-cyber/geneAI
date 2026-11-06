@@ -16,6 +16,7 @@
 | 数据可视化     | ✅   | ECharts 环形/柱状/GC-AT 图、可配置滑动窗口曲线、长度分布，真实数据 + 演示标识 |
 | 转录与翻译演示 | ✅   | DNA 双螺旋、RNA 聚合酶转录、mRNA 密码子、核糖体/tRNA 翻译、播放控制与状态机   |
 | 基因突变模拟   | ✅   | 替换/插入/缺失、DNA/RNA/蛋白三层对比、后果分类与分析报告                      |
+| DNA 序列地图   | ✅   | 正/反向 ORF、GC 曲线、限制酶、motif、突变位点；缩放/平移/框选与详情           |
 | 变异数据库     | ✅   | NCBI ClinVar 查询、列表/详情、临床意义与审查状态、原始链接、缓存与频率控制    |
 | ORF 分析       | 🚧   | 后端六阅读框算法与测试已完成；交互页面在 2.0 后续阶段接入                     |
 | 历史记录与报告 | ✅   | 搜索、本地日期筛选、分页、详情、删除确认、刷新、中文 PDF 报告（含碱基分布图） |
@@ -28,25 +29,25 @@
 - 前端：React 19、Vite 8、TypeScript 6、Tailwind CSS 4、TanStack Router/Query/Table、shadcn/ui、ECharts、Lucide
 - 后端：Python 3.12、FastAPI、SQLAlchemy 2、Biopython、SQLite
 - 报告：ReportLab（A4 PDF，含中文字体与碱基分布图）
-- 测试：Vitest（纯函数）、pytest（DNA / 转录 / 翻译 / ORF / 突变 / ClinVar / 比对 / API / 报告）
+- 测试：Vitest（纯函数）、pytest（DNA / 转录 / 翻译 / ORF / 突变 / ClinVar / 比对 / 地图 / API / 报告）
 
 ## 项目结构
 
 ```
 ├─ src/                     前端
-│  ├─ features/             页面与业务组件（analysis / compare / dashboard / visualization / history / settings / transcription / mutation / variants）
+│  ├─ features/             页面与业务组件（analysis / compare / dashboard / visualization / history / settings / transcription / mutation / map / variants）
 │  ├─ components/           ui 基础组件 + geneai 业务组件（PageHeader/StatCard/ChartCard/SequenceInput…）
 │  ├─ lib/                  dna.ts 算法、api 客户端、图表主题、演示数据
 │  ├─ routes/               TanStack Router 文件式路由（自动生成 routeTree.gen.ts）
 │  └─ styles/               theme.css 设计令牌
 ├─ server/                  后端
 │  ├─ app/
-│  │  ├─ routers/           analyze / history / comparisons / stats / central_dogma / mutation / variants
-│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、dates.py、genetic_code.py、transcription.py、translation.py、orf.py、mutation.py、clinvar.py
+│  │  ├─ routers/           analyze / history / comparisons / stats / central_dogma / mutation / map / variants
+│  │  ├─ services/          dna.py、fasta.py、alignment.py、report.py、dates.py、genetic_code.py、transcription.py、translation.py、orf.py、mutation.py、map_features.py、clinvar.py
 │  │  ├─ models.py          AnalysisRecord / Comparison / Meta
 │  │  ├─ schemas.py         请求与响应模型
 │  │  └─ main.py            FastAPI 入口
-│  ├─ tests/                pytest（DNA / 转录 / 翻译 / ORF / 突变 / ClinVar / 比对 / API / 报告）
+│  ├─ tests/                pytest（DNA / 转录 / 翻译 / ORF / 突变 / ClinVar / 比对 / 地图 / API / 报告）
 │  ├─ requirements.txt
 │  └─ .env.example
 ├─ docs/screenshots/        各阶段验收截图与示例报告
@@ -122,7 +123,7 @@ pnpm test:e2e     # 13 步业务流程（Playwright + 系统 Edge），并输出
 
 # 后端单元与接口测试
 cd server
-.venv\Scripts\python.exe -m pytest tests -q   # 150 个用例（DNA/转录/翻译/ORF/突变/ClinVar/比对/API/报告）
+.venv\Scripts\python.exe -m pytest tests -q   # 159 个用例（DNA/转录/翻译/ORF/突变/ClinVar/比对/地图/API/报告）
 ```
 
 ## 数据库初始化
@@ -165,6 +166,7 @@ POST   /api/analyze                              {sequence, sequence_name?}
 POST   /api/transcribe                            {sequence, strand, input_direction}
 POST   /api/translate                             {sequence, strand, input_direction, frame, stop_at_stop}
 POST   /api/mutate                                {sequence, mutation_type, position, alt?, ref?, length?, frame, strand, input_direction}
+POST   /api/map                                    {sequence, window, step, min_orf_aa, enzymes, motifs, mutation?}
 GET    /api/variants/search?q=&query_type=&limit=  ClinVar 查询（基因/rs/VCV/ID）
 GET    /api/variants/{variation_id}               ClinVar 单条详情
 POST   /api/upload/fasta                         multipart file，单条 FASTA

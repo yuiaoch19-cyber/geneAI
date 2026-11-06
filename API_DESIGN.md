@@ -102,28 +102,29 @@ allow_headers = ["*"]
 
 ## 2. 接口总览（已实现，0.8.0）
 
-| 方法   | 路径                           | 说明                     |
-| ------ | ------------------------------ | ------------------------ |
-| GET    | `/api/health`                  | 健康检查与数据库连通性   |
-| POST   | `/api/analyze`                 | 分析 DNA 序列（不写库）  |
-| POST   | `/api/transcribe`              | DNA → RNA 转录           |
-| POST   | `/api/translate`               | DNA → 蛋白质翻译         |
-| POST   | `/api/mutate`                  | 应用突变并预测后果       |
-| GET    | `/api/variants/search`         | ClinVar 变异查询         |
-| GET    | `/api/variants/{id}`           | ClinVar 单条详情         |
-| POST   | `/api/compare`                 | 双序列全局比对（不写库） |
-| POST   | `/api/upload/fasta`            | 上传并解析单条 FASTA     |
-| POST   | `/api/history`                 | 分析并保存一条历史记录   |
-| GET    | `/api/history`                 | 历史列表（搜索 + 分页）  |
-| GET    | `/api/history/{id}`            | 历史详情                 |
-| DELETE | `/api/history/{id}`            | 删除历史记录             |
-| GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据         |
-| GET    | `/api/history/{id}/report`     | 导出 PDF 分析报告        |
-| GET    | `/api/stats/overview`          | Dashboard 聚合统计       |
-| POST   | `/api/comparisons`             | 比对并保存一条记录       |
-| GET    | `/api/comparisons`             | 比对列表（搜索 + 分页）  |
-| GET    | `/api/comparisons/{id}`        | 比对详情（含对齐与差异） |
-| DELETE | `/api/comparisons/{id}`        | 删除比对记录             |
+| 方法   | 路径                           | 说明                                 |
+| ------ | ------------------------------ | ------------------------------------ |
+| GET    | `/api/health`                  | 健康检查与数据库连通性               |
+| POST   | `/api/analyze`                 | 分析 DNA 序列（不写库）              |
+| POST   | `/api/transcribe`              | DNA → RNA 转录                       |
+| POST   | `/api/translate`               | DNA → 蛋白质翻译                     |
+| POST   | `/api/mutate`                  | 应用突变并预测后果                   |
+| POST   | `/api/map`                     | 序列地图图层（ORF/GC/酶/motif/突变） |
+| GET    | `/api/variants/search`         | ClinVar 变异查询                     |
+| GET    | `/api/variants/{id}`           | ClinVar 单条详情                     |
+| POST   | `/api/compare`                 | 双序列全局比对（不写库）             |
+| POST   | `/api/upload/fasta`            | 上传并解析单条 FASTA                 |
+| POST   | `/api/history`                 | 分析并保存一条历史记录               |
+| GET    | `/api/history`                 | 历史列表（搜索 + 分页）              |
+| GET    | `/api/history/{id}`            | 历史详情                             |
+| DELETE | `/api/history/{id}`            | 删除历史记录                         |
+| GET    | `/api/history/{id}/gc-windows` | 滑动窗口 GC 数据                     |
+| GET    | `/api/history/{id}/report`     | 导出 PDF 分析报告                    |
+| GET    | `/api/stats/overview`          | Dashboard 聚合统计                   |
+| POST   | `/api/comparisons`             | 比对并保存一条记录                   |
+| GET    | `/api/comparisons`             | 比对列表（搜索 + 分页）              |
+| GET    | `/api/comparisons/{id}`        | 比对详情（含对齐与差异）             |
+| DELETE | `/api/comparisons/{id}`        | 删除比对记录                         |
 
 所有接口均为相对路径，前端通过 Vite 代理 `/api` 访问 `http://127.0.0.1:8000`。
 
@@ -674,7 +675,72 @@ curl -F "file=@demo.fasta" http://127.0.0.1:8000/api/upload/fasta
 
 ---
 
-## 13. 非目标
+## 13. 序列地图（2.0）
+
+### `POST /api/map`
+
+请求：
+
+```json
+{
+  "sequence": "ATGGAACCTTGGTAA",
+  "window": 50,
+  "step": 10,
+  "min_orf_aa": 0,
+  "enzymes": ["EcoRI", "BamHI"],
+  "motifs": ["TATA", "GCGC"],
+  "mutation": { "mutation_type": "substitution", "position": 4, "alt": "A" }
+}
+```
+
+响应（节选）：
+
+```json
+{
+  "sequence_length": 15,
+  "gc": {
+    "window": 50,
+    "step": 10,
+    "points": [],
+    "strategy": "仅统计完整窗口"
+  },
+  "orfs": [
+    {
+      "strand": "+",
+      "frame": 1,
+      "start": 1,
+      "end": 15,
+      "length_aa": 4,
+      "is_potential": true
+    }
+  ],
+  "orf_total": 1,
+  "restriction_sites": [
+    {
+      "enzyme": "EcoRI",
+      "recognition_site": "GAATTC",
+      "cut_position": 6,
+      "strand": "+"
+    }
+  ],
+  "motifs": [{ "pattern": "TATA", "start": 9, "end": 12, "strand": "+" }],
+  "mutation": { "label": "错义突变", "position": 4, "ref": "G", "alt": "A" },
+  "warnings": [],
+  "coordinate_rule": "所有区间为 1-based 闭区间；负链坐标已换算为正链；ORF 为潜在开放阅读框。"
+}
+```
+
+要点：
+
+- 限制酶位点为 Biopython `enzyme.search` 的 1-based 切割位点。
+- motif 同时搜索正链与反向互补链；负链坐标换算回正链。
+- GC 只输出完整窗口；窗口过大时 `strategy` 与 `warnings` 说明。
+- ORF 仅 ATG 起始、同框终止结束，均标记 `is_potential: true`，不等同已验证基因。
+- 突变可选；提供时返回与 `/api/mutate` 一致的后果标签与蛋白质变化摘要。
+
+---
+
+## 14. 非目标
 
 - 不做 GraphQL、WebSocket/SSE、OAuth、API Key（本地单机课程项目）。
 - 不做批量上传、软删除、回收站。

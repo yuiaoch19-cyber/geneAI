@@ -345,3 +345,87 @@ class VariantDetailOut(BaseModel):
     retrieved_at: str
     cached: bool
     item: VariantRecordOut
+
+class MapMutationIn(BaseModel):
+    mutation_type: Literal["substitution", "insertion", "deletion"]
+    position: int = Field(ge=0)
+    alt: str = ""
+    ref: str = ""
+    length: int | None = Field(default=None, ge=1)
+    frame: int = Field(default=1, ge=1, le=3)
+
+
+class MapRequest(BaseModel):
+    sequence: str = Field(min_length=1)
+    window: int = Field(default=50, ge=2)
+    step: int = Field(default=10, ge=1)
+    min_orf_aa: int = Field(default=0, ge=0)
+    enzymes: list[str] = Field(default_factory=list)
+    motifs: list[str] = Field(default_factory=list)
+    mutation: MapMutationIn | None = None
+
+
+class MapGcOut(BaseModel):
+    window: int
+    step: int
+    points: list[GcWindowPoint]
+    strategy: str
+
+
+class MapOrfOut(BaseModel):
+    strand: str
+    frame: int
+    start: int
+    end: int
+    length_nt: int
+    length_aa: int
+    start_codon: str
+    stop_codon: str | None
+    protein: str
+    is_complete: bool
+    is_potential: bool
+
+
+class RestrictionSiteOut(BaseModel):
+    enzyme: str
+    recognition_site: str
+    cut_position: int
+    strand: str
+
+
+class MotifOut(BaseModel):
+    pattern: str
+    start: int
+    end: int
+    strand: str
+
+
+class MapMutationOut(BaseModel):
+    position: int
+    type: str
+    ref: str
+    alt: str
+    length_delta: int
+    original_sequence: str
+    mutated_sequence: str
+    consequence: str
+    label: str
+    affected_codon: int | None
+    original_protein: str
+    mutated_protein: str
+    is_premature_stop: bool
+    protein_changes: list[ProteinChangeOut]
+    note: str
+
+
+class MapOut(BaseModel):
+    sequence: str
+    sequence_length: int
+    gc: MapGcOut
+    orfs: list[MapOrfOut]
+    orf_total: int
+    restriction_sites: list[RestrictionSiteOut]
+    motifs: list[MotifOut]
+    mutation: MapMutationOut | None
+    warnings: list[str]
+    coordinate_rule: str

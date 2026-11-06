@@ -9,12 +9,15 @@ import type {
   ComparisonScoring,
   CodonResult,
   DnaStrand,
+  GcWindowPoint,
   GcWindows,
   MutationAnalysis,
   MutationType,
   ProteinChange,
   SequenceDirection,
   SequenceDifference,
+  SequenceMapInput,
+  SequenceMapResult,
   StatsOverview,
   TranscriptionResult,
   TranslationResult,
@@ -681,4 +684,158 @@ export async function searchVariants(params: {
 export async function getVariant(id: string): Promise<VariantRecord> {
   const raw = await api.get<{ item: RawVariantRecord }>(`/variants/${id}`)
   return toVariantRecord(raw.item)
+}
+
+interface RawMapGc {
+  window: number
+  step: number
+  points: GcWindowPoint[]
+  strategy: string
+}
+
+interface RawMapOrf {
+  strand: '+' | '-'
+  frame: number
+  start: number
+  end: number
+  length_nt: number
+  length_aa: number
+  start_codon: string
+  stop_codon: string | null
+  protein: string
+  is_complete: boolean
+  is_potential: boolean
+}
+
+interface RawRestrictionSite {
+  enzyme: string
+  recognition_site: string
+  cut_position: number
+  strand: '+' | '-'
+}
+
+interface RawMotifSite {
+  pattern: string
+  start: number
+  end: number
+  strand: '+' | '-'
+}
+
+interface RawMapMutation {
+  position: number
+  type: MutationType
+  ref: string
+  alt: string
+  length_delta: number
+  original_sequence: string
+  mutated_sequence: string
+  consequence: MutationAnalysis['consequence']
+  label: string
+  affected_codon: number | null
+  original_protein: string
+  mutated_protein: string
+  is_premature_stop: boolean
+  protein_changes: RawProteinChange[]
+  note: string
+}
+
+interface RawSequenceMap {
+  sequence: string
+  sequence_length: number
+  gc: RawMapGc
+  orfs: RawMapOrf[]
+  orf_total: number
+  restriction_sites: RawRestrictionSite[]
+  motifs: RawMotifSite[]
+  mutation: RawMapMutation | null
+  warnings: string[]
+  coordinate_rule: string
+}
+
+export async function buildSequenceMap(
+  input: SequenceMapInput
+): Promise<SequenceMapResult> {
+  const raw = await api.post<RawSequenceMap>('/map', {
+    sequence: input.sequence,
+    window: input.window,
+    step: input.step,
+    min_orf_aa: input.minOrfAa,
+    enzymes: input.enzymes,
+    motifs: input.motifs,
+    mutation: input.mutation
+      ? {
+          mutation_type: input.mutation.mutationType,
+          position: input.mutation.position,
+          alt: input.mutation.alt ?? '',
+          ref: input.mutation.ref ?? '',
+          length: input.mutation.length,
+          frame: input.mutation.frame,
+        }
+      : null,
+  })
+  return {
+    sequence: raw.sequence,
+    sequenceLength: raw.sequence_length,
+    gc: {
+      window: raw.gc.window,
+      step: raw.gc.step,
+      points: raw.gc.points,
+      strategy: raw.gc.strategy,
+    },
+    orfs: raw.orfs.map((orf) => ({
+      strand: orf.strand,
+      frame: orf.frame,
+      start: orf.start,
+      end: orf.end,
+      lengthNt: orf.length_nt,
+      lengthAa: orf.length_aa,
+      startCodon: orf.start_codon,
+      stopCodon: orf.stop_codon,
+      protein: orf.protein,
+      isComplete: orf.is_complete,
+      isPotential: orf.is_potential,
+    })),
+    orfTotal: raw.orf_total,
+    restrictionSites: raw.restriction_sites.map((site) => ({
+      enzyme: site.enzyme,
+      recognitionSite: site.recognition_site,
+      cutPosition: site.cut_position,
+      strand: site.strand,
+    })),
+    motifs: raw.motifs.map((motif) => ({
+      pattern: motif.pattern,
+      start: motif.start,
+      end: motif.end,
+      strand: motif.strand,
+    })),
+    mutation: raw.mutation
+      ? {
+          position: raw.mutation.position,
+          type: raw.mutation.type,
+          ref: raw.mutation.ref,
+          alt: raw.mutation.alt,
+          lengthDelta: raw.mutation.length_delta,
+          originalSequence: raw.mutation.original_sequence,
+          mutatedSequence: raw.mutation.mutated_sequence,
+          consequence: raw.mutation.consequence,
+          label: raw.mutation.label,
+          affectedCodon: raw.mutation.affected_codon,
+          originalProtein: raw.mutation.original_protein,
+          mutatedProtein: raw.mutation.mutated_protein,
+          isPrematureStop: raw.mutation.is_premature_stop,
+          proteinChanges: raw.mutation.protein_changes.map((change) => ({
+            type: change.type,
+            originalStart: change.original_start,
+            originalEnd: change.original_end,
+            mutatedStart: change.mutated_start,
+            mutatedEnd: change.mutated_end,
+            original: change.original,
+            mutated: change.mutated,
+          })),
+          note: raw.mutation.note,
+        }
+      : null,
+    warnings: raw.warnings,
+    coordinateRule: raw.coordinate_rule,
+  }
 }

@@ -16,6 +16,7 @@ import { Route as AuthenticatedVisualizationRouteImport } from './routes/_authen
 import { Route as AuthenticatedVariantsRouteImport } from './routes/_authenticated/variants'
 import { Route as AuthenticatedTranscriptionRouteImport } from './routes/_authenticated/transcription'
 import { Route as AuthenticatedMutationRouteImport } from './routes/_authenticated/mutation'
+import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated/map'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedCompareRouteImport } from './routes/_authenticated/compare'
 import { Route as AuthenticatedAnalysisRouteImport } from './routes/_authenticated/analysis'
@@ -81,6 +82,11 @@ const AuthenticatedTranscriptionRoute =
 const AuthenticatedMutationRoute = AuthenticatedMutationRouteImport.update({
   id: '/mutation',
   path: '/mutation',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMapRoute = AuthenticatedMapRouteImport.update({
+  id: '/map',
+  path: '/map',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/compare': typeof AuthenticatedCompareRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/map': typeof AuthenticatedMapRoute
   '/mutation': typeof AuthenticatedMutationRoute
   '/transcription': typeof AuthenticatedTranscriptionRoute
   '/variants': typeof AuthenticatedVariantsRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/analysis': typeof AuthenticatedAnalysisRoute
   '/compare': typeof AuthenticatedCompareRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/map': typeof AuthenticatedMapRoute
   '/mutation': typeof AuthenticatedMutationRoute
   '/transcription': typeof AuthenticatedTranscriptionRoute
   '/variants': typeof AuthenticatedVariantsRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/_authenticated/analysis': typeof AuthenticatedAnalysisRoute
   '/_authenticated/compare': typeof AuthenticatedCompareRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/map': typeof AuthenticatedMapRoute
   '/_authenticated/mutation': typeof AuthenticatedMutationRoute
   '/_authenticated/transcription': typeof AuthenticatedTranscriptionRoute
   '/_authenticated/variants': typeof AuthenticatedVariantsRoute
@@ -371,6 +380,7 @@ export interface FileRouteTypes {
     | '/analysis'
     | '/compare'
     | '/history'
+    | '/map'
     | '/mutation'
     | '/transcription'
     | '/variants'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/analysis'
     | '/compare'
     | '/history'
+    | '/map'
     | '/mutation'
     | '/transcription'
     | '/variants'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/_authenticated/analysis'
     | '/_authenticated/compare'
     | '/_authenticated/history'
+    | '/_authenticated/map'
     | '/_authenticated/mutation'
     | '/_authenticated/transcription'
     | '/_authenticated/variants'
@@ -529,6 +541,13 @@ declare module '@tanstack/react-router' {
       path: '/mutation'
       fullPath: '/mutation'
       preLoaderRoute: typeof AuthenticatedMutationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/map': {
+      id: '/_authenticated/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof AuthenticatedMapRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/history': {
@@ -772,6 +791,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalysisRoute: typeof AuthenticatedAnalysisRoute
   AuthenticatedCompareRoute: typeof AuthenticatedCompareRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedMapRoute: typeof AuthenticatedMapRoute
   AuthenticatedMutationRoute: typeof AuthenticatedMutationRoute
   AuthenticatedTranscriptionRoute: typeof AuthenticatedTranscriptionRoute
   AuthenticatedVariantsRoute: typeof AuthenticatedVariantsRoute
@@ -790,6 +810,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalysisRoute: AuthenticatedAnalysisRoute,
   AuthenticatedCompareRoute: AuthenticatedCompareRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedMapRoute: AuthenticatedMapRoute,
   AuthenticatedMutationRoute: AuthenticatedMutationRoute,
   AuthenticatedTranscriptionRoute: AuthenticatedTranscriptionRoute,
   AuthenticatedVariantsRoute: AuthenticatedVariantsRoute,

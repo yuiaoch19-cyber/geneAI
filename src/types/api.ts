@@ -295,3 +295,88 @@ export type VariantSearchResult = {
   items: VariantRecord[]
   warnings: string[]
 }
+
+export type MapStrand = '+' | '-'
+
+export interface MapGc {
+  window: number
+  step: number
+  points: GcWindowPoint[]
+  strategy: string
+}
+
+export interface MapOrf {
+  strand: MapStrand
+  frame: number
+  start: number
+  end: number
+  lengthNt: number
+  lengthAa: number
+  startCodon: string
+  stopCodon: string | null
+  protein: string
+  isComplete: boolean
+  isPotential: boolean
+}
+
+export interface RestrictionSite {
+  enzyme: string
+  recognitionSite: string
+  cutPosition: number
+  strand: MapStrand
+}
+
+export interface MotifSite {
+  pattern: string
+  start: number
+  end: number
+  strand: MapStrand
+}
+
+export interface MapMutation {
+  position: number
+  type: MutationType
+  ref: string
+  alt: string
+  lengthDelta: number
+  originalSequence: string
+  mutatedSequence: string
+  consequence: string
+  label: string
+  affectedCodon: number | null
+  originalProtein: string
+  mutatedProtein: string
+  isPrematureStop: boolean
+  proteinChanges: ProteinChange[]
+  note: string
+}
+
+export interface SequenceMapResult {
+  sequence: string
+  sequenceLength: number
+  gc: MapGc
+  orfs: MapOrf[]
+  orfTotal: number
+  restrictionSites: RestrictionSite[]
+  motifs: MotifSite[]
+  mutation: MapMutation | null
+  warnings: string[]
+  coordinateRule: string
+}
+
+export interface SequenceMapInput {
+  sequence: string
+  window?: number
+  step?: number
+  minOrfAa?: number
+  enzymes?: string[]
+  motifs?: string[]
+  mutation?: {
+    mutationType: MutationType
+    position: number
+    alt?: string
+    ref?: string
+    length?: number
+    frame?: number
+  } | null
+}
