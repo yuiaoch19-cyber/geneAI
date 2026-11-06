@@ -202,6 +202,13 @@ export function MutationSimulationPage() {
       })
       setResult(data)
       toast.success(`突变分析完成：${data.label}`)
+      if (window.innerWidth < 1280) {
+        window.setTimeout(() => {
+          document
+            .getElementById('mutation-results')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 150)
+      }
     } catch (cause) {
       const message =
         cause instanceof ApiError ? cause.message : '突变分析失败，请稍后再试。'
@@ -566,7 +573,10 @@ export function MutationSimulationPage() {
             </Card>
           </div>
 
-          <div className='min-w-0 space-y-4 xl:col-span-7'>
+          <div
+            id='mutation-results'
+            className='min-w-0 scroll-mt-20 space-y-4 xl:col-span-7'
+          >
             {loading ? (
               <Card className='py-0 shadow-card'>
                 <CardContent className='p-5'>

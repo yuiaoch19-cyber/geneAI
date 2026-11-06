@@ -371,26 +371,6 @@ export function SequenceMapPage() {
                 </Button>
               </CardContent>
             </Card>
-
-            <Card className='hidden sm:block'>
-              <CardHeader className='pb-3'>
-                <CardTitle className='text-sm'>图层与坐标</CardTitle>
-              </CardHeader>
-              <CardContent className='space-y-2 text-[11px] leading-5 text-muted-foreground'>
-                <p>
-                  ORF：仅 ATG 起始、同框终止密码子结束；标注为「潜在 ORF」，不等同已验证基因。
-                </p>
-                <p>
-                  GC：完整窗口 (G + C) / (A + T + G + C)，N 不计入分母，末尾不足一个窗口的碱基忽略。
-                </p>
-                <p>
-                  限制酶：识别位点按 Biopython 切割位点记录，坐标为 1-based 正链。
-                </p>
-                <p>
-                  Motif：同时搜索正链与反向互补链，负链坐标已换算为正链坐标。
-                </p>
-              </CardContent>
-            </Card>
           </div>
 
           <div className='min-w-0 space-y-4 xl:col-span-8'>
@@ -529,6 +509,33 @@ export function SequenceMapPage() {
             ) : null}
           </div>
         </div>
+
+        <Card className='mt-4'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-sm'>图层与坐标</CardTitle>
+            <CardDescription>
+              所有图层均来自同一次后端计算结果，坐标统一为 1-based。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='grid gap-3 text-[11px] leading-5 text-muted-foreground sm:grid-cols-2 xl:grid-cols-4'>
+            <p>
+              <span className='font-medium text-foreground'>ORF</span>
+              ：仅 ATG 起始、同框终止密码子结束；标注为「潜在 ORF」，不等同已验证基因。
+            </p>
+            <p>
+              <span className='font-medium text-foreground'>GC</span>
+              ：完整窗口 (G + C) / (A + T + G + C)，N 不计入分母，末尾不足一个窗口的碱基忽略。
+            </p>
+            <p>
+              <span className='font-medium text-foreground'>限制酶</span>
+              ：识别位点按 Biopython 切割位点记录，坐标为 1-based 正链。
+            </p>
+            <p>
+              <span className='font-medium text-foreground'>Motif</span>
+              ：同时搜索正链与反向互补链，负链坐标已换算为正链坐标。
+            </p>
+          </CardContent>
+        </Card>
       </Main>
 
       <Dialog
