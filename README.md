@@ -4,6 +4,8 @@
 
 前端基于 **shadcn-admin** 二次开发，保留下游的技术栈、组件体系与路由方案；不接入任何大模型或第三方序列服务。
 
+> 老师 / 评委快速上手：见 [教师使用说明](docs/TEACHER_GUIDE.md)（启动三步、5 分钟演示路线、常见问题）。
+
 ![DNA 分析页面](docs/screenshots/phase4-analysis-result.png)
 
 ## 功能
@@ -53,6 +55,7 @@
 ├─ docs/screenshots/        各阶段验收截图与示例报告
 ├─ docs/audit/              阶段 9 优化后页面截图（audit-before 为优化前）
 ├─ docs/FINAL_ACCEPTANCE.md 最终验收清单与测试报告
+├─ docs/TEACHER_GUIDE.md    教师使用说明（启动 / 演示 / 常见问题）
 ├─ docs/PRESENTATION.md     答辩讲稿
 ├─ docs/GeneAI-2.0-答辩演示.pptx 答辩演示文稿
 ├─ samples/                 手动验收用 FASTA 样本
