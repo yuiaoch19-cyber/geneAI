@@ -43,8 +43,16 @@ const source = DEMO_ANALYSIS.sequence
 export const DEMO_RECORDS: DemoRecord[] = [
   buildRecord('演示 · HBB 基因片段', source, 12),
   buildRecord('演示 · HBB 启动区片段', source.slice(0, 60), 60 * 5),
-  buildRecord('演示 · HBB 外显子片段', `${source.slice(5)}${source.slice(0, 20)}`, 60 * 26),
-  buildRecord('演示 · 高 GC 对照片段', `${source.slice(10, 35)}GCGC${source.slice(35, 80)}`, 60 * 49),
+  buildRecord(
+    '演示 · HBB 外显子片段',
+    `${source.slice(5)}${source.slice(0, 20)}`,
+    60 * 26
+  ),
+  buildRecord(
+    '演示 · 高 GC 对照片段',
+    `${source.slice(10, 35)}GCGC${source.slice(35, 80)}`,
+    60 * 49
+  ),
 ]
 
 export const DEMO_BASE_COUNTS: BaseCounts = DEMO_RECORDS.reduce<BaseCounts>(
@@ -64,15 +72,13 @@ export const DEMO_AVERAGE_GC =
 
 export const DEMO_LAST_ANALYZED_AT = DEMO_RECORDS[0].createdAt
 
-export const DEMO_TREND = [...DEMO_RECORDS]
-  .reverse()
-  .map((record) => ({
-    id: record.id,
-    name: record.name,
-    gcContent: record.gcContent,
-    atContent: record.atContent,
-    createdAt: record.createdAt,
-  }))
+export const DEMO_TREND = [...DEMO_RECORDS].reverse().map((record) => ({
+  id: record.id,
+  name: record.name,
+  gcContent: record.gcContent,
+  atContent: record.atContent,
+  createdAt: record.createdAt,
+}))
 
 export function toAnalysisRecord(record: DemoRecord): AnalysisRecord {
   return {

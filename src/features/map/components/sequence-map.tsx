@@ -1,9 +1,13 @@
 import { useMemo, useRef, useState } from 'react'
-import { Minus, MousePointerSquareDashed, RotateCcw, ZoomIn } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import type { MapOrf, SequenceMapResult } from '@/types/api'
+import {
+  Minus,
+  MousePointerSquareDashed,
+  RotateCcw,
+  ZoomIn,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 const W = 1000
 const H = 412
@@ -133,7 +137,9 @@ export function SequenceMap({
   }
 
   const bpAt = (clientX: number, rect: DOMRect) => {
-    const ratio = (clientX - rect.left - (LEFT / W) * rect.width) / ((PLOT_W / W) * rect.width)
+    const ratio =
+      (clientX - rect.left - (LEFT / W) * rect.width) /
+      ((PLOT_W / W) * rect.width)
     return clamp(view.start + ratio * span, 0, length)
   }
 
@@ -156,7 +162,8 @@ export function SequenceMap({
     const current = drag.current
     if (!current) return
     if (current.mode === 'pan') {
-      const deltaRatio = (event.clientX - current.x) / ((PLOT_W / W) * rect.width)
+      const deltaRatio =
+        (event.clientX - current.x) / ((PLOT_W / W) * rect.width)
       const delta = -deltaRatio * (current.view.end - current.view.start)
       const start = clamp(
         current.view.start + delta,
@@ -293,7 +300,11 @@ export function SequenceMap({
             </linearGradient>
           </defs>
 
-          <g fontSize='12' fill='currentColor' className='text-muted-foreground'>
+          <g
+            fontSize='12'
+            fill='currentColor'
+            className='text-muted-foreground'
+          >
             <text x='8' y={Y.plusOrf + 12}>
               正链 ORF
             </text>
@@ -327,26 +338,26 @@ export function SequenceMap({
           {ticks.list
             .filter((tick) => tick < length)
             .map((tick) => (
-            <g key={tick}>
-              <line
-                x1={x(tick)}
-                y1={Y.ruler - 5}
-                x2={x(tick)}
-                y2={Y.ruler + 4}
-                stroke='currentColor'
-                strokeOpacity='0.4'
-              />
-              <text
-                x={x(tick)}
-                y={Y.ruler - 10}
-                fontSize='11.5'
-                textAnchor='middle'
-                className='fill-muted-foreground'
-              >
-                {(tick + 1).toLocaleString('zh-CN')}
-              </text>
-            </g>
-          ))}
+              <g key={tick}>
+                <line
+                  x1={x(tick)}
+                  y1={Y.ruler - 5}
+                  x2={x(tick)}
+                  y2={Y.ruler + 4}
+                  stroke='currentColor'
+                  strokeOpacity='0.4'
+                />
+                <text
+                  x={x(tick)}
+                  y={Y.ruler - 10}
+                  fontSize='11.5'
+                  textAnchor='middle'
+                  className='fill-muted-foreground'
+                >
+                  {(tick + 1).toLocaleString('zh-CN')}
+                </text>
+              </g>
+            ))}
 
           <line
             x1={LEFT}
@@ -464,7 +475,10 @@ export function SequenceMap({
           })}
 
           {visibleEnzymes.map((site, index) => (
-            <g key={`${site.enzyme}-${site.cutPosition}-${index}`} data-hit='true'>
+            <g
+              key={`${site.enzyme}-${site.cutPosition}-${index}`}
+              data-hit='true'
+            >
               <title>
                 {site.enzyme} · {site.cutPosition} bp · {site.recognitionSite}
               </title>
@@ -506,7 +520,8 @@ export function SequenceMap({
                 fillOpacity='0.55'
               >
                 <title>
-                  {motif.pattern} · {motif.start}–{motif.end} bp · {motif.strand} 链
+                  {motif.pattern} · {motif.start}–{motif.end} bp ·{' '}
+                  {motif.strand} 链
                 </title>
               </rect>
             )
@@ -557,7 +572,9 @@ export function SequenceMap({
                 x={x(result.mutation.position - 1)}
                 y={Y.mutation - 10}
                 fontSize='10.5'
-                textAnchor={x(result.mutation.position - 1) < 120 ? 'start' : 'middle'}
+                textAnchor={
+                  x(result.mutation.position - 1) < 120 ? 'start' : 'middle'
+                }
                 className='fill-rose-600 dark:fill-rose-400'
                 pointerEvents='none'
               >
@@ -636,9 +653,7 @@ export function SequenceMap({
           <span className='h-2 w-3 rounded-sm border border-primary/50 bg-primary/10' />
           框选区间
         </span>
-        <span className='ml-auto'>
-          滚轮缩放 · 拖动平移 · Shift 拖动框选
-        </span>
+        <span className='ml-auto'>滚轮缩放 · 拖动平移 · Shift 拖动框选</span>
       </div>
     </div>
   )

@@ -1,29 +1,29 @@
-## Description
+## 变更说明
 
-<!-- A clear and concise description of what the pull request does. Include any relevant motivation and background. -->
+<!-- 简明描述这个 PR 做了什么、为什么需要它 -->
 
-## Types of changes
+## 变更类型
 
-<!-- What types of changes does your code introduce to shadcn-admin? Put an `x` in the boxes that apply -->
+<!-- 在适用的方框中打 x -->
 
-- [ ] Bug Fix (fixes an issue)
-- [ ] New Feature (adds functionality)
-- [ ] Refactor (improves code structure without changing behavior)
-- [ ] Breaking Change (incompatible change to existing behavior or public API)
-- [ ] Others (any other types not listed above)
+- [ ] Bug 修复
+- [ ] 新功能
+- [ ] 重构（不改变外部行为）
+- [ ] 破坏性变更（不兼容现有行为或公开 API）
+- [ ] 文档 / 其他
 
-## Checklist
+## 自检清单
 
-<!-- Please follow this checklist and put an x in each of the boxes, like this: [x]. You can also fill these out after creating the PR. This is simply a reminder of what we are going to look for before merging your code. -->
+- [ ] 已阅读 [贡献指南](https://github.com/yuiaoch19-cyber/geneAI/blob/main/.github/CONTRIBUTING.md)
+- [ ] `pnpm lint`、`pnpm format:check`、`pnpm test:unit`、`pnpm build` 均通过
+- [ ] 后端 `pytest tests -q` 通过（如涉及后端）
+- [ ] 新增/修改的计算逻辑已补充测试
+- [ ] 未引入密钥、真实数据或本机绝对路径
 
-- [ ] I have read the [Contributing Guide](https://github.com/satnaing/shadcn-admin/blob/main/.github/CONTRIBUTING.md)
+## 补充说明
 
-## Further comments
+<!-- 较复杂的改动请说明方案取舍、考虑过的替代方案等 -->
 
-<!-- If this is a relatively large or complex change, kick off the discussion by explaining why you chose the solution you did and what alternatives you considered, etc... -->
+## 关联 Issue
 
-## Related Issue
-
-<!-- If this PR is related to an existing issue, link to it here. -->
-
-Closes: #<!-- Issue number, if applicable -->
+Closes #<!-- Issue 编号，如有 -->

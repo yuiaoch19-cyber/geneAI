@@ -1,5 +1,9 @@
 # GeneAI · DNA 智能序列分析与可视化平台
 
+[![CI](https://github.com/yuiaoch19-cyber/geneAI/actions/workflows/ci.yml/badge.svg)](https://github.com/yuiaoch19-cyber/geneAI/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+**仓库地址**：<https://github.com/yuiaoch19-cyber/geneAI>
+
 面向课程展示的 DNA 序列分析平台。输入或上传 DNA 序列，即可完成碱基组成、GC/AT 含量、互补链、反向互补链、RNA 转录与序列差异比较，并把分析结果保存在本机 SQLite 中，支持导出带碱基分布图的中文 PDF 报告。2.0 版本新增转录/翻译动态演示、基因突变模拟，以及基于 NCBI ClinVar 的已知变异注释查询；动画和对比结果每一步都来自后端真实算法。
 
 前端基于 **shadcn-admin** 二次开发，保留下游的技术栈、组件体系与路由方案；不接入任何大模型或第三方序列服务。
@@ -80,6 +84,13 @@
 默认端口：前端 `5208`，后端 `8000`。首次运行会自动创建数据库，无需手工建表。
 
 ## 快速开始
+
+### 0. 获取代码
+
+```bash
+git clone https://github.com/yuiaoch19-cyber/geneAI.git
+cd geneAI
+```
 
 ### 1. 安装前端依赖
 
@@ -224,6 +235,14 @@ DELETE /api/comparisons/{id}
 - 序列只保存在本机 SQLite，不上传第三方；日志不打印序列内容。
 - 页面不提供疾病或临床结论，仅用于教学演示。
 
+## 开源许可与贡献
+
+本项目以 **MIT License** 开源，详见 [LICENSE](LICENSE)。欢迎提交 Issue 与 Pull Request，参与方式见 [贡献指南](.github/CONTRIBUTING.md)。
+
+- 报告问题：使用 [Bug 模板](.github/ISSUE_TEMPLATE/🐞-bug-report.md) 描述复现步骤与环境。
+- 提交改动：Fork → 新建分支 → 本地跑通 `pnpm lint`、`pnpm format:check`、`pnpm test:unit`、`pnpm build` 与后端 pytest → 提交 PR。
+- 功能建议：使用 [功能建议模板](.github/ISSUE_TEMPLATE/✨-feature-request.md) 或直接在 Issues 中讨论。
+
 ## 致谢
 
-基于 [satnaing/shadcn-admin](https://github.com/satnaing/shadcn-admin) 二次开发，保留其 MIT License 与组件设计。
+基于 [satnaing/shadcn-admin](https://github.com/satnaing/shadcn-admin) 二次开发，保留其 MIT License（见 [LICENSE](LICENSE)）与组件设计。

@@ -26,7 +26,9 @@ export function BaseDonut({ counts, height = 260 }: BaseDonutProps) {
     ].filter((item) => item.value > 0)
 
     return {
-      color: data.map((item) => BASE_COLORS[item.key as keyof typeof BASE_COLORS]),
+      color: data.map(
+        (item) => BASE_COLORS[item.key as keyof typeof BASE_COLORS]
+      ),
       title: {
         text: formatNumber(total),
         subtext: '碱基总数',
@@ -45,7 +47,11 @@ export function BaseDonut({ counts, height = 260 }: BaseDonutProps) {
         borderColor: theme.tooltipBorder,
         textStyle: { color: theme.tooltipText, fontSize: 12 },
         formatter: (params: unknown) => {
-          const item = params as { name: string; value: number; percent: number }
+          const item = params as {
+            name: string
+            value: number
+            percent: number
+          }
           const key = item.name.toLowerCase() as keyof typeof BASE_NAMES
           return `${BASE_NAMES[key]}<br/><b>${formatNumber(item.value)}</b> bp · ${item.percent}%`
         },

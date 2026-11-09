@@ -328,10 +328,10 @@ GeneAI 是一个**面向初学者与课堂展示**的 DNA 基础序列分析与�
 
 ### 9.2 环境约束
 
-- 工作目录：`C:\Users\语\Desktop\生物项目`。
+- 工作目录：克隆后的仓库根目录（下文的 `server/` 与 `src/` 均为相对该目录的路径）。
 - 前端已在本地安装依赖，使用 **hoisted** node linker（`.npmrc` 中 `node-linker=hoisted`），不要删改该配置，否则 Vite 8 + Node 26 下依赖解析会失败。
 - 沙箱可能禁止 Node 派生子进程；若构建报 `spawn EPERM`，需在具备完整权限的终端执行 `pnpm build`，而不是删除构建步骤。
-- Python 3.14.3 位于 `C:\Users\语\AppData\Local\Programs\Python\Python314\python.exe`（未加入 PATH）；另备 `C:\Users\语\.local\bin\python3.12`。Biopython/reportlab 若在 3.14 下无可用 wheel，后端虚拟环境改用 3.12。
+- 后端请使用 **Python 3.12** 创建虚拟环境；若系统默认是 3.14，可用 `py -3.12 -m venv .venv`（Windows）或 `python3.12 -m venv .venv`（macOS/Linux）。Biopython/ReportLab 在 3.14 下可能无可用 wheel。
 
 ### 9.3 课程展示约束
 

@@ -10,7 +10,10 @@ export class ApiError extends Error {
   field?: string
   status: number
 
-  constructor(message: string, options: { code?: string; field?: string; status?: number } = {}) {
+  constructor(
+    message: string,
+    options: { code?: string; field?: string; status?: number } = {}
+  ) {
     super(message)
     this.name = 'ApiError'
     this.code = options.code ?? 'UNKNOWN'
@@ -48,14 +51,19 @@ function normalizeDetail(payload: unknown): {
       const issue = body.detail[0] as ValidationIssue
       const field = issue.loc?.filter((part) => part !== 'body').join('.')
       return {
-        message: issue.msg ? `请求参数不合法：${issue.msg}` : '请求参数不合法。',
+        message: issue.msg
+          ? `请求参数不合法：${issue.msg}`
+          : '请求参数不合法。',
         code: body.code ?? 'VALIDATION_ERROR',
         field,
       }
     }
   }
 
-  return { message: '请求失败，请确认后端服务已经启动。', code: 'NETWORK_ERROR' }
+  return {
+    message: '请求失败，请确认后端服务已经启动。',
+    code: 'NETWORK_ERROR',
+  }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

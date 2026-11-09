@@ -1,4 +1,10 @@
 import { useState } from 'react'
+import type {
+  DnaStrand,
+  MutationAnalysis,
+  MutationType,
+  SequenceDirection,
+} from '@/types/api'
 import {
   ArrowRight,
   Copy,
@@ -11,20 +17,9 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type {
-  DnaStrand,
-  MutationAnalysis,
-  MutationType,
-  SequenceDirection,
-} from '@/types/api'
 import { ApiError } from '@/lib/api/client'
 import { mutateSequence } from '@/lib/api/geneai'
 import { cn } from '@/lib/utils'
-import { PageHeader } from '@/components/geneai/page-header'
-import { EmptyState } from '@/components/geneai/empty-state'
-import { LoadingState } from '@/components/geneai/loading-state'
-import { AppHeader } from '@/components/layout/app-header'
-import { Main } from '@/components/layout/main'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,6 +39,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { EmptyState } from '@/components/geneai/empty-state'
+import { LoadingState } from '@/components/geneai/loading-state'
+import { PageHeader } from '@/components/geneai/page-header'
+import { AppHeader } from '@/components/layout/app-header'
+import { Main } from '@/components/layout/main'
 import { DnaDiffView } from './components/dna-diff-view'
 import { ProteinDiffView } from './components/protein-diff-view'
 
@@ -262,7 +262,9 @@ export function MutationSimulationPage() {
           <div className='space-y-4 xl:col-span-5'>
             <Card className='gap-0 overflow-hidden py-0 shadow-card'>
               <CardHeader className='border-b border-border/70 px-5 py-4'>
-                <CardTitle className='text-sm font-semibold'>原始 DNA 序列</CardTitle>
+                <CardTitle className='text-sm font-semibold'>
+                  原始 DNA 序列
+                </CardTitle>
                 <CardDescription className='text-xs'>
                   支持编码链或模板链；小写与空白会自动处理。
                 </CardDescription>
@@ -388,7 +390,9 @@ export function MutationSimulationPage() {
 
             <Card className='gap-0 overflow-hidden py-0 shadow-card'>
               <CardHeader className='border-b border-border/70 px-5 py-4'>
-                <CardTitle className='text-sm font-semibold'>突变操作</CardTitle>
+                <CardTitle className='text-sm font-semibold'>
+                  突变操作
+                </CardTitle>
                 <CardDescription className='text-xs'>
                   指定类型、位置与碱基；提交后由后端重新校验。
                 </CardDescription>
@@ -441,7 +445,9 @@ export function MutationSimulationPage() {
                         type='number'
                         min={1}
                         value={deleteLength}
-                        onChange={(event) => setDeleteLength(event.target.value)}
+                        onChange={(event) =>
+                          setDeleteLength(event.target.value)
+                        }
                         className='h-9 tabular-nums'
                       />
                     </div>
@@ -545,11 +551,7 @@ export function MutationSimulationPage() {
               </CardHeader>
               <CardContent className='space-y-3 px-5 py-4'>
                 {[
-                  [
-                    '同义突变',
-                    'bg-chart-3',
-                    '碱基改变，但编码的氨基酸不变。',
-                  ],
+                  ['同义突变', 'bg-chart-3', '碱基改变，但编码的氨基酸不变。'],
                   [
                     '错义突变',
                     'bg-chart-4',
@@ -627,7 +629,8 @@ export function MutationSimulationPage() {
                           分析结果
                         </CardTitle>
                         <CardDescription className='text-xs'>
-                          {name || '未命名序列'} · {result.originalSequence.length} bp
+                          {name || '未命名序列'} ·{' '}
+                          {result.originalSequence.length} bp
                         </CardDescription>
                       </div>
                       <div className='flex flex-wrap items-center gap-1.5'>
@@ -663,15 +666,22 @@ export function MutationSimulationPage() {
                       ],
                       [
                         '受影响密码子',
-                        result.affectedCodon ? `第 ${result.affectedCodon} 个` : '—',
+                        result.affectedCodon
+                          ? `第 ${result.affectedCodon} 个`
+                          : '—',
                       ],
-                      ['阅读框', `+${result.frame}（${result.strand === 'coding' ? '编码链' : '模板链'}）`],
+                      [
+                        '阅读框',
+                        `+${result.frame}（${result.strand === 'coding' ? '编码链' : '模板链'}）`,
+                      ],
                     ].map(([label, value]) => (
                       <div
                         key={label}
                         className='rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5'
                       >
-                        <p className='text-[11px] text-muted-foreground'>{label}</p>
+                        <p className='text-[11px] text-muted-foreground'>
+                          {label}
+                        </p>
                         <p className='mt-1 text-sm font-semibold tabular-nums'>
                           {value}
                         </p>
@@ -682,7 +692,9 @@ export function MutationSimulationPage() {
 
                 <Card className='gap-0 overflow-hidden py-0 shadow-card'>
                   <CardHeader className='border-b border-border/70 px-5 py-4'>
-                    <CardTitle className='text-sm font-semibold'>DNA 差异</CardTitle>
+                    <CardTitle className='text-sm font-semibold'>
+                      DNA 差异
+                    </CardTitle>
                     <CardDescription className='text-xs'>
                       红色为原始序列中的替换/缺失碱基，绿色为突变后新增或替换的碱基。
                     </CardDescription>
@@ -694,7 +706,9 @@ export function MutationSimulationPage() {
 
                 <Card className='gap-0 overflow-hidden py-0 shadow-card'>
                   <CardHeader className='border-b border-border/70 px-5 py-4'>
-                    <CardTitle className='text-sm font-semibold'>转录对比</CardTitle>
+                    <CardTitle className='text-sm font-semibold'>
+                      转录对比
+                    </CardTitle>
                     <CardDescription className='text-xs'>
                       统一输出 5′→3′ RNA；模板链先转换为编码链再转录。
                     </CardDescription>
@@ -723,7 +737,9 @@ export function MutationSimulationPage() {
 
                 <Card className='gap-0 overflow-hidden py-0 shadow-card'>
                   <CardHeader className='border-b border-border/70 px-5 py-4'>
-                    <CardTitle className='text-sm font-semibold'>蛋白质对比</CardTitle>
+                    <CardTitle className='text-sm font-semibold'>
+                      蛋白质对比
+                    </CardTitle>
                     <CardDescription className='text-xs'>
                       逐位显示氨基酸变化；`*` 表示终止密码子。
                     </CardDescription>
@@ -756,7 +772,10 @@ export function MutationSimulationPage() {
                   <CardContent className='space-y-3 px-5 py-4 text-xs leading-relaxed'>
                     <dl className='grid gap-x-6 gap-y-2 sm:grid-cols-2'>
                       {[
-                        ['突变', `${result.label} · ${result.mutation.position} 位`],
+                        [
+                          '突变',
+                          `${result.label} · ${result.mutation.position} 位`,
+                        ],
                         ['坐标规则', result.mutation.coordinateRule],
                         ['阅读框', `+${result.frame}`],
                         [
@@ -770,7 +789,9 @@ export function MutationSimulationPage() {
                           <dt className='w-20 shrink-0 text-muted-foreground'>
                             {label}
                           </dt>
-                          <dd className='min-w-0 font-medium break-all'>{value}</dd>
+                          <dd className='min-w-0 font-medium break-all'>
+                            {value}
+                          </dd>
                         </div>
                       ))}
                     </dl>

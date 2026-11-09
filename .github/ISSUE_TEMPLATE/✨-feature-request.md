@@ -1,6 +1,6 @@
 ---
 name: "✨ Feature Request"
-about: Suggest an idea for improving Shadcn-Admin
+about: 为 GeneAI 提出功能建议
 title: "[Feature Request]: "
 labels: enhancement
 assignees: ""

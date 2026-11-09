@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { transcribeSequence, translateSequence } from '@/lib/api/geneai'
+import { TEACHING_SAMPLES } from '@/lib/demo-sequences'
 import { analyzeSequence } from '@/lib/dna'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +41,6 @@ import { MobilePlayerBar, PlayerControls } from './components/player-controls'
 import { TranscriptionStage } from './components/transcription-stage'
 import { TranslationStage } from './components/translation-stage'
 import { useCentralDogmaPlayer } from './use-player'
-import { TEACHING_SAMPLES } from '@/lib/demo-sequences'
 
 const EXAMPLE = 'ATGGAACCTTGGTAA'
 
@@ -424,9 +424,9 @@ export function TranscriptionPage() {
 
           <aside className='flex flex-col gap-4 xl:sticky xl:top-4'>
             {transcription ? (
-            <div className='hidden xl:block'>
-              <PlayerControls player={player} />
-            </div>
+              <div className='hidden xl:block'>
+                <PlayerControls player={player} />
+              </div>
             ) : (
               <Card className='gap-0 overflow-hidden py-0 shadow-card'>
                 <div className='border-b border-border/70 px-5 py-4'>

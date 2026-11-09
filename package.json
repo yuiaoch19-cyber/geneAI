@@ -1,7 +1,8 @@
 {
-  "name": "shadcn-admin",
+  "name": "geneai",
   "private": false,
-  "version": "2.2.1",
+  "version": "2.0.0",
+  "description": "GeneAI - DNA 序列分析与可视化教学平台",
   "type": "module",
   "scripts": {
     "dev": "vite",

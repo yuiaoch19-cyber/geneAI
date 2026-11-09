@@ -46,3 +46,8 @@ server/.pytest_cache/
 
 # Local scratch files
 .tmp/
+pip-*/
+.tanstack/
+
+# WorkBuddy workspace state (local only, never published)
+.workbuddy/

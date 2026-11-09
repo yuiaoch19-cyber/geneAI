@@ -1,47 +1,62 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  install-lint-build:
+  frontend:
+    name: Frontend (lint / format / unit / build)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install pnpm
-        run: npm install -g pnpm
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint the code
+      - name: Lint
         run: pnpm lint
 
-      # - name: Analyze unused files and dependencies
-      #   run: pnpm knip
-
-      - name: Run Prettier check
+      - name: Prettier check
         run: pnpm format:check
 
-      - name: Install browsers
-        run: pnpm test:browser:install
+      - name: Unit tests (pure functions)
+        run: pnpm test:unit
 
-      - name: Run tests
-        run: pnpm test
-
-      - name: Build the project
+      - name: Build
         run: pnpm build
+
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: server/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r server/requirements.txt
+
+      - name: Run backend tests
+        working-directory: server
+        run: python -m pytest tests -q

@@ -1,6 +1,6 @@
 ---
 name: "\U0001F41E Bug report"
-about: Report a bug or unexpected behavior in Shadcn-Admin
+about: 报告 GeneAI 中的 Bug 或异常行为
 title: "[BUG]: "
 labels: bug
 assignees: ""

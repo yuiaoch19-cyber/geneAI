@@ -188,7 +188,7 @@ export const Route = createFileRoute('/_authenticated/analysis')({
 2. **不要在受限沙箱下构建**：Vite 需要派生子进程，受限模式会 `spawn EPERM`。使用 full-access 会话。
 3. **dev server 可能只监听 `[::1]`**：探测用 `http://[::1]:<port>` 或 Node 原生 http，不要假设 `127.0.0.1`。
 4. **curl 不可用**（schannel 证书错误）：用 Node `fetch` / `Invoke-RestMethod`。
-5. **Python 不在 PATH**：使用完整路径 `C:\Users\语\AppData\Local\Programs\Python\Python314\python.exe`，或改用 `C:\Users\语\.local\bin\python3.12`。优先 3.12 以确保 Biopython/ReportLab 轮子可用。
+5. **Python 可能不在 PATH**：优先使用仓库内的虚拟环境解释器 `server/.venv/Scripts/python.exe`（macOS/Linux 为 `.venv/bin/python`），或 `py -3.12` / `python3.12`。固定使用 Python 3.12 以确保 Biopython/ReportLab 轮子可用。
 6. **git 自动维护会失败**：已设 `gc.auto=0`、`maintenance.auto=false`，不要恢复。
 7. **`pnpm test` 需要 Chromium**：先 `pnpm exec playwright install chromium`；未安装时不要声称测试通过。
 8. **不要读取根目录 `.env.example`**（被凭据策略拦截）；后端另建 `server/.env.example`。

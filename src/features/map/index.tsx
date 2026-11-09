@@ -1,13 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import type { MapOrf, MutationType, SequenceMapInput } from '@/types/api'
 import { Dna, FlaskConical, Map as MapIcon, TriangleAlert } from 'lucide-react'
-
-import { AppHeader } from '@/components/layout/app-header'
-import { Main } from '@/components/layout/main'
-import { PageHeader } from '@/components/geneai/page-header'
-import { EmptyState } from '@/components/geneai/empty-state'
-import { ErrorState } from '@/components/geneai/error-state'
-import { LoadingState } from '@/components/geneai/loading-state'
+import { buildSequenceMap } from '@/lib/api/geneai'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,10 +31,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { buildSequenceMap } from '@/lib/api/geneai'
-import { cn } from '@/lib/utils'
-import type { MapOrf, MutationType, SequenceMapInput } from '@/types/api'
-
+import { EmptyState } from '@/components/geneai/empty-state'
+import { ErrorState } from '@/components/geneai/error-state'
+import { LoadingState } from '@/components/geneai/loading-state'
+import { PageHeader } from '@/components/geneai/page-header'
+import { AppHeader } from '@/components/layout/app-header'
+import { Main } from '@/components/layout/main'
 import { SequenceMap } from './components/sequence-map'
 
 const DEMO_SEQUENCE =
@@ -224,7 +222,9 @@ export function SequenceMapPage() {
                   />
                   <p className='text-[11px] text-muted-foreground'>
                     当前{' '}
-                    {sequence.replace(/[^A-Za-z]/g, '').length.toLocaleString('zh-CN')}{' '}
+                    {sequence
+                      .replace(/[^A-Za-z]/g, '')
+                      .length.toLocaleString('zh-CN')}{' '}
                     个字符
                   </p>
                 </div>
@@ -286,7 +286,9 @@ export function SequenceMapPage() {
                 </div>
 
                 <div className='space-y-1.5'>
-                  <Label htmlFor='map-motifs'>Motif（逗号分隔，支持 IUPAC）</Label>
+                  <Label htmlFor='map-motifs'>
+                    Motif（逗号分隔，支持 IUPAC）
+                  </Label>
                   <Input
                     id='map-motifs'
                     value={motifText}
@@ -333,7 +335,9 @@ export function SequenceMapPage() {
                           id='map-position'
                           inputMode='numeric'
                           value={positionText}
-                          onChange={(event) => setPositionText(event.target.value)}
+                          onChange={(event) =>
+                            setPositionText(event.target.value)
+                          }
                         />
                       </div>
                       <div className='space-y-1.5'>
@@ -348,7 +352,8 @@ export function SequenceMapPage() {
                         />
                       </div>
                       <p className='col-span-2 text-[11px] text-muted-foreground'>
-                        替换/缺失为 1-based 起始位置；插入表示「第 N 位之后」，0 表示序列开头。
+                        替换/缺失为 1-based 起始位置；插入表示「第 N 位之后」，0
+                        表示序列开头。
                       </p>
                     </div>
                   ) : null}
@@ -520,11 +525,13 @@ export function SequenceMapPage() {
           <CardContent className='grid gap-3 text-[11px] leading-5 text-muted-foreground sm:grid-cols-2 xl:grid-cols-4'>
             <p>
               <span className='font-medium text-foreground'>ORF</span>
-              ：仅 ATG 起始、同框终止密码子结束；标注为「潜在 ORF」，不等同已验证基因。
+              ：仅 ATG 起始、同框终止密码子结束；标注为「潜在
+              ORF」，不等同已验证基因。
             </p>
             <p>
               <span className='font-medium text-foreground'>GC</span>
-              ：完整窗口 (G + C) / (A + T + G + C)，N 不计入分母，末尾不足一个窗口的碱基忽略。
+              ：完整窗口 (G + C) / (A + T + G + C)，N
+              不计入分母，末尾不足一个窗口的碱基忽略。
             </p>
             <p>
               <span className='font-medium text-foreground'>限制酶</span>
@@ -589,8 +596,8 @@ export function SequenceMapPage() {
           <DialogHeader>
             <DialogTitle>突变位点 · {result?.mutation?.label}</DialogTitle>
             <DialogDescription>
-              第 {result?.mutation?.position} 位 · {result?.mutation?.ref || '—'} →{' '}
-              {result?.mutation?.alt || '—'}
+              第 {result?.mutation?.position} 位 ·{' '}
+              {result?.mutation?.ref || '—'} → {result?.mutation?.alt || '—'}
             </DialogDescription>
           </DialogHeader>
           {result?.mutation ? (
@@ -632,7 +639,7 @@ export function SequenceMapPage() {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className='rounded-lg border bg-muted/30 px-3 py-2'>
-      <p className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+      <p className='text-[10px] tracking-wide text-muted-foreground uppercase'>
         {label}
       </p>
       <p className='mt-0.5 truncate font-mono text-sm font-medium'>{value}</p>

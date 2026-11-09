@@ -233,19 +233,19 @@ export interface MutationAnalysis {
   note: string
 }
 
-export type VariantQueryType = "auto" | "gene" | "variant" | "id"
+export type VariantQueryType = 'auto' | 'gene' | 'variant' | 'id'
 
 export type SignificanceClass =
-  | "pathogenic"
-  | "likely_pathogenic"
-  | "vus"
-  | "likely_benign"
-  | "benign"
-  | "conflicting"
-  | "drug_response"
-  | "risk_factor"
-  | "other"
-  | "unknown"
+  | 'pathogenic'
+  | 'likely_pathogenic'
+  | 'vus'
+  | 'likely_benign'
+  | 'benign'
+  | 'conflicting'
+  | 'drug_response'
+  | 'risk_factor'
+  | 'other'
+  | 'unknown'
 
 export type VariantLocation = {
   assembly: string
