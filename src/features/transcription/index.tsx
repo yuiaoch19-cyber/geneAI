@@ -7,13 +7,16 @@ import type {
 } from '@/types/api'
 import {
   ArrowRight,
+  Boxes,
   ChevronDown,
+  Dna,
   FlaskConical,
   Info,
   Maximize2,
   Minimize2,
   Play,
   Sparkles,
+  Waves,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { transcribeSequence, translateSequence } from '@/lib/api/geneai'
@@ -33,6 +36,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/geneai/page-header'
+import { DnaMark } from '@/components/geneai/dna/dna-mark'
 import { AppHeader } from '@/components/layout/app-header'
 import { Main } from '@/components/layout/main'
 import { BASE_HEX, BASE_NAMES } from './colors'
@@ -304,6 +308,71 @@ export function TranscriptionPage() {
               </div>
             </SectionCard>
 
+            {!transcription ? (
+              <SectionCard
+                title='中心法则概览'
+                description='一次分析会同时生成 DNA 双螺旋、mRNA 与蛋白质三层结果。'
+                action={
+                  <Badge variant='outline' className='font-normal'>
+                    教学视图
+                  </Badge>
+                }
+              >
+                <div className='relative overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-5'>
+                  <DnaMark className='pointer-events-none absolute -end-4 -bottom-6 size-28 rotate-12 text-primary/[0.05]' />
+                  <div className='relative flex flex-col gap-3 sm:flex-row sm:items-center'>
+                    {[
+                      {
+                        icon: Dna,
+                        step: '01',
+                        title: 'DNA 双螺旋',
+                        desc: '编码链 / 模板链',
+                        tone: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
+                      },
+                      {
+                        icon: Waves,
+                        step: '02',
+                        title: 'mRNA',
+                        desc: 'T→U · 5′→3′',
+                        tone: 'bg-violet-500/10 text-violet-600 dark:text-violet-300',
+                      },
+                      {
+                        icon: Boxes,
+                        step: '03',
+                        title: '蛋白质',
+                        desc: '密码子 → 氨基酸',
+                        tone: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+                      },
+                    ].map((item, index) => (
+                      <div key={item.step} className='contents'>
+                        <div className='flex flex-1 items-center gap-3 rounded-lg border border-border/60 bg-card/80 px-3.5 py-3'>
+                          <span
+                            className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${item.tone}`}
+                          >
+                            <item.icon className='size-4' strokeWidth={1.8} />
+                          </span>
+                          <div className='min-w-0'>
+                            <p className='text-[10px] font-medium tracking-[0.14em] text-muted-foreground'>
+                              {item.step}
+                            </p>
+                            <p className='text-[13px] font-semibold'>
+                              {item.title}
+                            </p>
+                            <p className='truncate text-[11px] text-muted-foreground'>
+                              {item.desc}
+                            </p>
+                          </div>
+                        </div>
+                        {index < 2 ? (
+                          <ArrowRight className='mx-auto size-4 shrink-0 rotate-90 text-muted-foreground/50 sm:rotate-0' />
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </SectionCard>
+            ) : null}
+
             {transcription ? (
               <SectionCard
                 title='DNA 双螺旋'
@@ -558,7 +627,7 @@ export function TranscriptionPage() {
             </Card>
           </aside>
         </div>
-        <MobilePlayerBar player={player} />
+        {transcription ? <MobilePlayerBar player={player} /> : null}
       </Main>
     </>
   )

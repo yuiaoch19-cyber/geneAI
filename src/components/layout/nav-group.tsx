@@ -65,7 +65,7 @@ function NavBadge({ children }: { children: ReactNode }) {
 }
 
 const NAV_ITEM_CLASS =
-  'relative h-10 rounded-xl px-3 text-sidebar-foreground/75 transition-colors before:absolute before:inset-y-2.5 before:inset-s-0 before:w-0.5 before:rounded-full before:bg-sky-300 before:opacity-0 before:transition-opacity hover:text-sidebar-foreground data-[active=true]:text-white data-[active=true]:shadow-[0_10px_24px_-16px_rgba(37,99,235,1)] data-[active=true]:before:opacity-100'
+  'relative h-10 rounded-xl px-3 text-sidebar-foreground/72 transition-all duration-200 before:absolute before:inset-y-2.5 before:inset-s-0 before:w-0.5 before:rounded-full before:bg-sky-300 before:opacity-0 before:transition-opacity hover:bg-white/[0.04] hover:text-sidebar-foreground data-[active=true]:bg-[linear-gradient(90deg,rgba(56,189,248,0.18),rgba(255,255,255,0.06))] data-[active=true]:text-white data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] data-[active=true]:before:opacity-100'
 
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
   const { setOpenMobile } = useSidebar()

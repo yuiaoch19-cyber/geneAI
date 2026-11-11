@@ -32,7 +32,7 @@ import {
   listAnalyses,
 } from '@/lib/api/geneai'
 import { formatNumber, formatPercent } from '@/lib/dna'
-import { statsKeys } from '@/hooks/use-stats-overview'
+import { statsKeys, useStatsOverview } from '@/hooks/use-stats-overview'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -109,6 +109,7 @@ export function AnalysisHistoryPage() {
   const [downloadingCsvId, setDownloadingCsvId] = useState<number | null>(null)
 
   const hasFilters = Boolean(keyword.trim() || dateFrom || dateTo)
+  const statsQuery = useStatsOverview()
 
   const historyQuery = useQuery({
     queryKey: ['history', { page, pageSize, keyword, dateFrom, dateTo }],
@@ -197,6 +198,10 @@ export function AnalysisHistoryPage() {
   const pages = data?.pages ?? 0
   const total = data?.total ?? 0
   const detail = detailQuery.data
+  const baseCounts = statsQuery.data?.baseCounts
+  const totalBases = baseCounts
+    ? baseCounts.a + baseCounts.t + baseCounts.g + baseCounts.c + baseCounts.n
+    : null
 
   return (
     <>
@@ -216,7 +221,46 @@ export function AnalysisHistoryPage() {
           }
         />
 
-        <div className='overflow-hidden rounded-xl border border-border/80 bg-card shadow-card'>
+        <div className='overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card'>
+          {total > 0 ? (
+          <div className='grid grid-cols-3 divide-x divide-border/60 border-b border-border/60 bg-muted/15'>
+            {[
+              {
+                label: '本机记录',
+                value: formatNumber(total),
+                unit: '条',
+              },
+              {
+                label: '累计碱基',
+                value:
+                  totalBases === null ? '—' : formatNumber(totalBases),
+                unit: 'bp',
+              },
+              {
+                label: '平均 GC',
+                value:
+                  statsQuery.data?.averageGc == null
+                    ? '—'
+                    : formatPercent(statsQuery.data.averageGc),
+                unit: '',
+              },
+            ].map((metric) => (
+              <div key={metric.label} className='px-4 py-3'>
+                <p className='text-[10.5px] tracking-[0.12em] text-muted-foreground uppercase'>
+                  {metric.label}
+                </p>
+                <p className='mt-1 text-lg font-semibold tabular-nums'>
+                  {metric.value}
+                  {metric.unit ? (
+                    <span className='ms-1 text-[11px] font-normal text-muted-foreground'>
+                      {metric.unit}
+                    </span>
+                  ) : null}
+                </p>
+              </div>
+            ))}
+          </div>
+          ) : null}
           <div className='flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-4 py-3.5'>
             <div className='flex flex-wrap items-center gap-2'>
               <span className='text-sm font-semibold'>分析记录</span>
@@ -354,7 +398,7 @@ export function AnalysisHistoryPage() {
                 <TableBody>
                   {records.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell className='max-w-[220px] ps-4'>
+                      <TableCell className='max-w-[150px] ps-4 sm:max-w-[220px]'>
                         <div className='flex items-center gap-2.5'>
                           <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-chart-1/10 text-chart-1'>
                             <Dna className='size-4' />
@@ -408,7 +452,7 @@ export function AnalysisHistoryPage() {
                           <Button
                             variant='ghost'
                             size='icon'
-                            className='size-8'
+                            className='hidden size-8 sm:inline-flex'
                             title='导出 CSV'
                             aria-label={`导出 ${record.name} 的 CSV`}
                             disabled={downloadingCsvId === record.id}

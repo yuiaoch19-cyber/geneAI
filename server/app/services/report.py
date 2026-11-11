@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import math
 import os
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -249,6 +250,46 @@ def _pie_chart(record: AnalysisRecord) -> Drawing | None:
     return drawing
 
 
+def _draw_helix_watermark(canvas) -> None:
+    """页面右下角的极淡 DNA 双螺旋水印，不干扰正文阅读。"""
+
+    center_x = A4[0] - 34 * mm
+    bottom = 36 * mm
+    height = 210 * mm
+    amplitude = 11 * mm
+    cycles = 5.5
+    steps = 72
+
+    canvas.saveState()
+    canvas.setStrokeColor(colors.Color(0.15, 0.29, 0.5))
+    canvas.setStrokeAlpha(0.06)
+    canvas.setLineWidth(1.1)
+
+    def x_at(index: int, phase: float) -> float:
+        ratio = index / steps
+        return center_x + amplitude * math.sin(
+            ratio * cycles * 2 * math.pi + phase
+        )
+
+    for phase in (0.0, math.pi):
+        path = canvas.beginPath()
+        for index in range(steps + 1):
+            y = bottom + height * index / steps
+            x = x_at(index, phase)
+            if index == 0:
+                path.moveTo(x, y)
+            else:
+                path.lineTo(x, y)
+        canvas.drawPath(path, stroke=1, fill=0)
+
+    canvas.setLineWidth(0.7)
+    for index in range(3, steps, 5):
+        y = bottom + height * index / steps
+        canvas.line(x_at(index, 0.0), y, x_at(index, math.pi), y)
+
+    canvas.restoreState()
+
+
 def build_analysis_report(record: AnalysisRecord) -> bytes:
     """生成单条分析记录的 PDF，返回字节流。"""
 
@@ -281,6 +322,7 @@ def build_analysis_report(record: AnalysisRecord) -> bytes:
 
     def draw_page(canvas, template):
         canvas.saveState()
+        _draw_helix_watermark(canvas)
         canvas.setStrokeColor(BORDER)
         canvas.setLineWidth(0.5)
         canvas.line(16 * mm, 12 * mm, A4[0] - 16 * mm, 12 * mm)

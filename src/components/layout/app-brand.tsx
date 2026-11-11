@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Dna } from 'lucide-react'
+import { DnaMark } from '@/components/geneai/dna/dna-mark'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -19,9 +19,9 @@ export function AppBrand() {
           className='gap-3 px-1.5 hover:bg-transparent data-[state=open]:bg-transparent'
         >
           <Link to='/' onClick={() => setOpenMobile(false)}>
-            <span className='relative flex aspect-square size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-blue-700 text-white shadow-[0_0_26px_-4px_rgba(56,132,255,0.85)] ring-1 ring-white/25'>
-              <Dna className='size-5.5' strokeWidth={1.9} />
-              <span className='absolute inset-0 rounded-2xl bg-white/10 blur-[6px]' />
+            <span className='relative flex aspect-square size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-blue-700 text-white shadow-[0_10px_30px_-10px_rgba(56,132,255,0.9)] ring-1 ring-white/25'>
+              <DnaMark className='size-6' />
+              <span className='absolute inset-0 rounded-2xl bg-gradient-to-b from-white/25 to-transparent opacity-60' />
             </span>
             <span className='grid flex-1 text-start leading-tight'>
               <span className='truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground'>

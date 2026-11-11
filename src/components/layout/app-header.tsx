@@ -25,11 +25,11 @@ function MobileSearch() {
 
 export function AppHeader() {
   return (
-    <Header className='border-b border-border/60 bg-card/80 backdrop-blur-xl'>
+    <Header className='border-b border-border/60 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55'>
       <div className='hidden w-full justify-center md:flex'>
         <Search
           placeholder='搜索功能或页面…（Ctrl + K）'
-          className='h-10 w-full max-w-xl rounded-xl border-border/70 bg-muted/35 px-3 text-[13px] shadow-none hover:bg-muted/60'
+          className='h-10 w-full max-w-2xl rounded-xl border-border/70 bg-card/70 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-colors hover:bg-card dark:shadow-none'
         />
       </div>
       <div className='ms-auto flex items-center gap-1.5'>

@@ -17,7 +17,7 @@ export function AppSidebar() {
     <Sidebar
       collapsible={collapsible}
       variant={variant}
-      className='border-e border-sidebar-border/60'
+      className='border-e border-white/[0.06] bg-[linear-gradient(180deg,#081120_0%,#0b1a30_52%,#0a1526_100%)] shadow-[inset_-1px_0_0_rgba(255,255,255,0.04)]'
     >
       <SidebarHeader className='px-3 pt-4 pb-2'>
         <AppBrand />

@@ -23,17 +23,17 @@ export function PageHeader({
         className
       )}
     >
-      <div className='min-w-0 space-y-2'>
+      <div className='min-w-0 space-y-2.5'>
         {eyebrow ? (
-          <p className='text-[11px] font-semibold tracking-[0.18em] text-primary uppercase'>
+          <p className='text-[10.5px] font-semibold tracking-[0.2em] text-primary/90 uppercase'>
             {eyebrow}
           </p>
         ) : null}
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]'>
+        <h1 className='text-[26px] leading-tight font-semibold tracking-tight text-foreground sm:text-[28px]'>
           {title}
         </h1>
         {description ? (
-          <p className='max-w-2xl text-sm leading-relaxed text-pretty text-muted-foreground'>
+          <p className='max-w-2xl text-[13.5px] leading-relaxed text-pretty text-muted-foreground'>
             {description}
           </p>
         ) : null}

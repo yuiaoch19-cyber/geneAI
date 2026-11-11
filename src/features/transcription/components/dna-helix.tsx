@@ -119,11 +119,24 @@ export function DnaHelix({
               y1={point.yCoding}
               x2={point.x}
               y2={point.yTemplate}
-              stroke='#cbd5e1'
-              strokeWidth={2}
-              strokeDasharray='3 4'
+              stroke={baseColor(point.codingBase)}
+              strokeWidth={2.2}
+              strokeOpacity={
+                point.index >= highlightFrom && point.index <= highlightTo
+                  ? 0.6
+                  : 0.26
+              }
             />
-            <circle cx={point.x} cy={point.yCoding} r={3.5} fill='#2563eb' />
+            <circle
+              cx={point.x}
+              cy={point.yCoding}
+              r={
+                point.index >= highlightFrom && point.index <= highlightTo
+                  ? 5
+                  : 3.5
+              }
+              fill='#2563eb'
+            />
             <circle cx={point.x} cy={point.yTemplate} r={3.5} fill='#7c3aed' />
             {expanded ? (
               <>

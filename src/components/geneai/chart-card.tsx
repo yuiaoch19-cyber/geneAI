@@ -22,17 +22,17 @@ export function ChartCard({
   return (
     <Card
       className={cn(
-        'gap-0 overflow-hidden rounded-xl border-border/80 py-0 shadow-card',
+        'gap-0 overflow-hidden rounded-2xl border-border/70 py-0 shadow-card',
         className
       )}
     >
-      <div className='flex items-start justify-between gap-3 border-b border-border/70 px-5 py-4'>
+      <div className='flex items-start justify-between gap-3 border-b border-border/60 bg-muted/20 px-5 py-4'>
         <div className='min-w-0 space-y-1'>
-          <h2 className='text-sm font-semibold tracking-tight text-foreground'>
+          <h2 className='text-[15px] font-semibold tracking-tight text-foreground'>
             {title}
           </h2>
           {description ? (
-            <p className='text-xs leading-relaxed text-muted-foreground'>
+            <p className='text-[11.5px] leading-relaxed text-muted-foreground'>
               {description}
             </p>
           ) : null}

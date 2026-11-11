@@ -1,5 +1,6 @@
 import type { ElementType, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { DnaMark } from './dna/dna-mark'
 
 export type EmptyStateIcon = ElementType<{
   className?: string
@@ -26,15 +27,16 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 text-center',
+        'relative flex flex-col items-center justify-center gap-3.5 overflow-hidden rounded-2xl border border-dashed border-border/80 bg-[radial-gradient(120%_120%_at_50%_0%,rgba(37,99,235,0.05),transparent_60%)] text-center',
         compact ? 'px-4 py-7' : 'px-6 py-12',
         className
       )}
     >
-      <span className='flex size-11 items-center justify-center rounded-xl bg-background text-muted-foreground shadow-xs ring-1 ring-border'>
-        <Icon className='size-5' strokeWidth={1.75} />
+      <DnaMark className='pointer-events-none absolute -end-2 -bottom-5 size-28 rotate-12 text-primary/[0.06]' />
+      <span className='relative flex size-12 items-center justify-center rounded-2xl border border-border/70 bg-card text-primary/80 shadow-sm'>
+        <Icon className='size-5' strokeWidth={1.65} />
       </span>
-      <div className='space-y-1'>
+      <div className='relative space-y-1'>
         <p className='text-sm font-medium text-foreground'>{title}</p>
         {description ? (
           <p className='mx-auto max-w-sm text-xs leading-relaxed text-muted-foreground'>
@@ -42,7 +44,7 @@ export function EmptyState({
           </p>
         ) : null}
       </div>
-      {action ? <div className='pt-1'>{action}</div> : null}
+      {action ? <div className='relative pt-1'>{action}</div> : null}
     </div>
   )
 }

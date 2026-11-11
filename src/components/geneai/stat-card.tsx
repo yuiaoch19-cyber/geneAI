@@ -33,15 +33,21 @@ export function StatCard({
   return (
     <Card
       className={cn(
-        'gap-0 rounded-2xl border-border/60 py-0 shadow-card transition-shadow hover:shadow-[0_18px_40px_-28px_rgba(30,58,138,0.5)]',
+        'group relative gap-0 overflow-hidden rounded-2xl border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.72))] py-0 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-float dark:bg-none',
         className
       )}
     >
+      <span
+        aria-hidden
+        className='pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-70 dark:via-white/10'
+      />
       <div className='flex items-start justify-between gap-3 p-4 pb-2 sm:p-5 sm:pb-2'>
-        <p className='text-[13px] font-medium text-muted-foreground'>{label}</p>
+        <p className='text-[12.5px] font-medium tracking-wide text-muted-foreground'>
+          {label}
+        </p>
         <span
           className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-full ring-1 ring-inset',
+            'flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset transition-transform duration-200 group-hover:scale-105',
             toneStyles[tone]
           )}
         >
