@@ -135,18 +135,21 @@ P2 执行提示词见 [UI_UPGRADE_P2_PROMPT.md](UI_UPGRADE_P2_PROMPT.md)。
 ### 6.7 PDF 报告 DNA 水印
 - `server/app/services/report.py` 新增 `_draw_helix_watermark()`：在每页右下角以 6% 透明度绘制双股正弦曲线与横档，压在正文之下。
 - 不改变正文边距、字体与统计口径；水印为装饰，不参与分析结论。
-- 已通过 `python -m pytest` 全量回归（164 passed）；运行时截图因本机 shell 无法启动后端而**尚未复核**，详见第 8 节。
+- 已通过 `python -m pytest` 全量回归（164 passed），并实际生成报告复核：`docs/screenshots/ui2-report-watermark.png`。水印在页面右侧呈低对比双螺旋，不遮挡正文。
 
 ## 7. 验收结论与剩余边界
 
 已完成 P0–P2 的视觉与交互升级：设计令牌、卡片/图表/统计/页头/空态、侧栏与顶栏、Hero 与转录 DNA 图形、设置右栏、转录初始态、历史概览与移动端操作、暗色复核、PDF 水印。
 
-仍未闭环：
+- 提交：`42682a6 feat(ui): upgrade interface quality and DNA visuals`
+- Gitee：已推送 `42682a6` 到 `main`
+- 预览：`http://127.0.0.1:5208/`（本地开发服务）
 
-1. **Git 提交未完成**：本机 `git`/shell 多次超时，工作区改动尚未提交；按要求未推送 GitHub。
-2. **PDF 水印未做运行时截图**：后端重启在本机卡住，代码与测试通过，但未生成新版 PDF 复核视觉效果。
-3. 设置页在超宽屏仍有一定留白；移动端地图保留横向滚动；DNA 图形为装饰插画，不参与计算。
-4. TanStack Devtools 默认关闭，需要时用 `VITE_SHOW_DEVTOOLS=true pnpm dev` 打开。
+仍待处理：
+
+1. GitHub：已推送到 `yuiaoch19-cyber/geneAI` 的 `main`（走 SSH，HTTPS 在本机不通）。
+2. 设置页在超宽屏仍有一定留白；移动端地图保留横向滚动；DNA 图形为装饰插画，不参与计算。
+3. TanStack Devtools 默认关闭，需要时用 `VITE_SHOW_DEVTOOLS=true pnpm dev` 打开。
 
 ## 8. 本轮新增证据
 
@@ -154,4 +157,5 @@ P2 执行提示词见 [UI_UPGRADE_P2_PROMPT.md](UI_UPGRADE_P2_PROMPT.md)。
 - `docs/screenshots/ui2-analysis-dark.png`、`ui2-transcription-dark.png`、`ui2-mutation-dark.png`、`ui2-variants-dark.png`、`ui2-map-dark.png`、`ui2-settings-dark.png`
 - `docs/screenshots/ui2-transcription-idle.png`、`ui2-transcription-idle-mobile.png`
 - `docs/screenshots/ui2-settings.png`、`ui2-settings-mobile.png`
+- `docs/screenshots/ui2-report-watermark.png`（PDF 水印实拍）
 - 构建 1.67 s；lint 0 error / 1 warning；Vitest 29；pytest 164。
