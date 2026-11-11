@@ -35,8 +35,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { PageHeader } from '@/components/geneai/page-header'
 import { DnaMark } from '@/components/geneai/dna/dna-mark'
+import { PageHeader } from '@/components/geneai/page-header'
 import { AppHeader } from '@/components/layout/app-header'
 import { Main } from '@/components/layout/main'
 import { BASE_HEX, BASE_NAMES } from './colors'

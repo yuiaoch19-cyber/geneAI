@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { DnaMark } from '@/components/geneai/dna/dna-mark'
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { DnaMark } from '@/components/geneai/dna/dna-mark'
 
 export function AppBrand() {
   const { setOpenMobile } = useSidebar()

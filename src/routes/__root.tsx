@@ -16,12 +16,13 @@ export const Route = createRootRouteWithContext<{
         <NavigationProgress />
         <Outlet />
         <Toaster duration={5000} mobileOffset={{ bottom: 96 }} />
-        {import.meta.env.DEV && import.meta.env.VITE_SHOW_DEVTOOLS === 'true' && (
-          <>
-            <ReactQueryDevtools buttonPosition='bottom-left' />
-            <TanStackRouterDevtools position='bottom-right' />
-          </>
-        )}
+        {import.meta.env.DEV &&
+          import.meta.env.VITE_SHOW_DEVTOOLS === 'true' && (
+            <>
+              <ReactQueryDevtools buttonPosition='bottom-left' />
+              <TanStackRouterDevtools position='bottom-right' />
+            </>
+          )}
       </>
     )
   },

@@ -47,7 +47,7 @@ export function StatCard({
         </p>
         <span
           className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset transition-transform duration-200 group-hover:scale-105',
+            'flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 transition-transform duration-200 ring-inset group-hover:scale-105',
             toneStyles[tone]
           )}
         >

@@ -142,14 +142,14 @@ P2 执行提示词见 [UI_UPGRADE_P2_PROMPT.md](UI_UPGRADE_P2_PROMPT.md)。
 已完成 P0–P2 的视觉与交互升级：设计令牌、卡片/图表/统计/页头/空态、侧栏与顶栏、Hero 与转录 DNA 图形、设置右栏、转录初始态、历史概览与移动端操作、暗色复核、PDF 水印。
 
 - 提交：`42682a6 feat(ui): upgrade interface quality and DNA visuals`
-- Gitee：已推送 `42682a6` 到 `main`
+- Gitee：已推送 `main`
+- GitHub：已推送到 `yuiaoch19-cyber/geneAI` 的 `main`（走 SSH，本机 HTTPS 不通）
 - 预览：`http://127.0.0.1:5208/`（本地开发服务）
 
 仍待处理：
 
-1. GitHub：已推送到 `yuiaoch19-cyber/geneAI` 的 `main`（走 SSH，HTTPS 在本机不通）。
-2. 设置页在超宽屏仍有一定留白；移动端地图保留横向滚动；DNA 图形为装饰插画，不参与计算。
-3. TanStack Devtools 默认关闭，需要时用 `VITE_SHOW_DEVTOOLS=true pnpm dev` 打开。
+1. 设置页在超宽屏仍有一定留白；移动端地图保留横向滚动；DNA 图形为装饰插画，不参与计算。
+2. TanStack Devtools 默认关闭，需要时用 `VITE_SHOW_DEVTOOLS=true pnpm dev` 打开。
 
 ## 8. 本轮新增证据
 
